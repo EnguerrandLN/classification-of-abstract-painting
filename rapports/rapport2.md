@@ -1,5 +1,5 @@
 Partie Enguerrand
-# Rapport - Semaine 2 : Deep Learning, Fusion Multimodale et Features Expertes
+# Rapport - semaine 2
 
 ## 1. Extraction de Caractéristiques Profondes (CNN)
 
@@ -8,17 +8,22 @@ Afin de pallier les limites des primitives classiques (qui tendent à noyer l'in
 * **Architecture** : Utilisation du modèle **VGG16** (pré-entraîné sur ImageNet), amputé de ses couches de classification finales pour l'utiliser comme pur extracteur visuel.
 * **Réduction de Dimension (PCA)** : Le tenseur brut a été réduit via une PCA à **50 composantes**, isolant l'essence stylistique (nervosité du trait, abstraction) tout en conservant un temps de calcul viable.
 
-## 2. Implémentation des "Features Expertes" (Réponse aux retours)
+## 2. Nouvelles features
 
-Suite aux retours de l'encadrement, nous avons implémenté trois métriques expertes très ciblées pour traiter les angles morts de nos premiers algorithmes :
+Suite à vos retours, nous avons implémenté de nouvelles métriques très ciblées pour traiter les angles morts de nos premiers algorithmes :
 
-1. **Détection du Minimalisme ("Ratio JPEG")** : Calcul du poids du fichier divisé par sa résolution. Une toile minimaliste ou monochrome (type "carré blanc") offre un taux de compression mathématiquement bien supérieur à une toile complexe, permettant de l'isoler.
-2. **Mesure de Symétrie (Grille 4x4)** : Évaluation de la différence de luminosité absolue entre les colonnes symétriques de la grille pour isoler les compositions géométriques centrées.
-3. **Détection de Grilles Régulières (FFT)** : Application d'une Transformée de Fourier 2D spatiale (FFT) et comptage des pics d'intensité pour détecter la présence de motifs répétitifs (Vasarely, Toroni).
+1. Taille de l'image : taille brute, taille normalisée par nombre de pixels, et log de la taille
+2. Symétrie : symétrie gauche/droite, haut/bas, diagonale, et gradient centre/bords
+3. Application d'une TF en 2D spatiale (FFT) et comptage des pics d'intensité pour détecter la présence de motifs répétitifs
+4. Mesures d'entropie : entropie multi-canal (R, G, B, saturation), nombre de couleurs distinctes quantifiées, ratio de zones uniformes (std locale < seuil)
+5. Approximation par filtre gaussien large (sigma=2 et sigma=5) suivi d'un gradient Sobel avec seuillage sélectif au 85e percentile
+6. Transformée de Hough probabiliste (nombre de lignes longues, proportion H/V, entropie angulaire) et mesures de compacité et rectangularité des régions
+
+Une piste que nous aurions serait de trouver au cas par cas des features très spécifiques à certains peintres si ceux-ci sont pathologiques.
 
 ## 3. La Fusion Multimodale Définitive (Espace à 103 dimensions)
 
-Pour unifier ces approches sans créer de conflit sémantique, nous avons procédé à une concaténation pondérée (*Alpha-Blending*) : **85% pour le CNN, 15% pour les features classiques, et 40% pour les 3 features expertes**.
+Pour unifier ces approches sans créer de conflit sémantique, nous avons procédé comme précédemment à une concaténation pondérée : 85% pour le CNN, 15% pour les anciennes features, et 40% pour les nouvelles features.
 
 * **Bilan quantitatif** : Le K-Means (K=15) appliqué à cette matrice de 103 dimensions génère un score de silhouette de **0.037**. Cette très légère baisse par rapport au CNN pur s'explique par l'introduction de nos contraintes sémantiques strictes (FFT, Minimalisme). L'espace vectoriel est mathématiquement un peu moins "lisse", mais visuellement et historiquement beaucoup plus cohérent.
 
@@ -26,10 +31,10 @@ Pour unifier ces approches sans créer de conflit sémantique, nous avons procé
 
 La répartition des œuvres au sein des clusters prouve que l'algorithme hybride a réussi à reconstruire des familles stylistiques majeures :
 
-* **Cluster 0 - Le Grand Carrefour de la Matière** : C'est le cluster dominant de notre espace (320 œuvres). Nicolas de Staël y est littéralement sanctuarisé (24 de ses œuvres y sont regroupées). Il est rejoint par Hans Hartung (14 œuvres) et Zao Wou-Ki (7). L'algorithme a parfaitement identifié les empâtements et la peinture au couteau.
-* **Cluster 13 - L'Expressionnisme Chromatique** : Joan Mitchell y règne de manière spectaculaire (19 œuvres isolées). Le réseau a reconnu son chaos lumineux et gestuel caractéristique.
-* **Le Cas Mark Rothko (L'évolution du style)** : L'algorithme a divisé méthodiquement les toiles de Rothko. Si un noyau dur est identifié dans le Cluster 3 (15 œuvres), le reste est réparti (Cluster 1, C0, C14). Le réseau reconnaît ses rectangles vaporeux, mais les primitives classiques forcent la ségrégation par période chromatique.
-* **L'Anomalie Spatiale (Cluster 9)** : Lucio Fontana domine ce sous-groupe très spécifique avec 12 œuvres. Ses toiles monochromes fendues créent un signal géométrique unique, très probablement renforcé par notre nouvelle feature de "Ratio JPEG".
+* **Cluster 0 : C'est le cluster dominant de notre espace (320 œuvres). Nicolas de Staël y est littéralement sanctuarisé (24 de ses œuvres y sont regroupées). Il est rejoint par Hans Hartung (14 œuvres) et Zao Wou-Ki (7). L'algorithme a parfaitement identifié les empâtements et la peinture au couteau.
+* **Cluster 13 : Joan Mitchell y règne de manière spectaculaire (19 œuvres isolées). Le réseau a reconnu son chaos lumineux et gestuel caractéristique.
+* **Le cas Mark Rothko** : L'algorithme a divisé méthodiquement les toiles de Rothko. Si un noyau dur est identifié dans le Cluster 3 (15 œuvres), le reste est réparti (Cluster 1, C0, C14). Le réseau reconnaît ses rectangles vaporeux, mais les primitives classiques forcent la ségrégation par période chromatique.
+* **Cluster 9** : Lucio Fontana domine ce sous-groupe très spécifique avec 12 œuvres. Ses toiles monochromes fendues créent un signal géométrique unique, très probablement renforcé par notre nouvelle feature de "Ratio JPEG".
 
 ## 5. Analyse des Similarités Ciblées (Distances Cosinus)
 
