@@ -25,7 +25,7 @@ Une piste que nous aurions serait de trouver au cas par cas des features très s
 
 Pour unifier ces approches sans créer de conflit sémantique, nous avons procédé comme précédemment à une concaténation pondérée : 85% pour le CNN, 15% pour les anciennes features, et 40% pour les nouvelles features.
 
-* **Bilan quantitatif** : Le K-Means (K=15) appliqué à cette matrice de 103 dimensions génère un score de silhouette de **0.037**. Cette très légère baisse par rapport au CNN pur s'explique par l'introduction de nos contraintes sémantiques strictes (FFT, Minimalisme). L'espace vectoriel est mathématiquement un peu moins "lisse", mais visuellement et historiquement beaucoup plus cohérent.
+* **Bilan quantitatif** : Le K-Means (K=15) appliqué à cette matrice de 103 dimensions génère un score de silhouette de **0.037**. Cette très légère baisse par rapport au CNN pur s'explique par l'introduction de nos contraintes sémantiques strictes (FFT, minimalisme). L'espace vectoriel est mathématiquement un peu moins "lisse", mais visuellement et historiquement beaucoup plus cohérent.
 
 ## 4. Validation Sémantique des Clusters (K=15)
 
@@ -42,3 +42,7 @@ Pour valider formellement la robustesse de notre espace face aux interrogations 
 
 * **Opposition Radicale (Accardi vs Riley)** : La distance calculée entre Carla Accardi (traits libres) et Bridget Riley (Op Art géométrique) s'élève à **1.2423**. Dans cet espace vectoriel, une distance supérieure à 1.0 indique une quasi-orthogonalité. Le modèle confirme mathématiquement qu'ils n'appartiennent à aucun voisinage sémantique commun.
 * **La Famille des Motifs (Vasarely / Riley / Toroni)** : À l'inverse, l'ajout de notre détecteur spectral (FFT) a porté ses fruits. Les distances se réduisent drastiquement entre les peintres de la régularité : Vasarely se rapproche fortement de Riley (**0.6962**) et de Toroni (**0.7434**). L'algorithme a su créer un sous-espace latent dédié à la géométrie répétitive, contournant la prédominance des couleurs.
+
+## 6. De l'utilité d'une connaissance des artistes
+
+On gagnerait sans doute à connaître les styles et périodes des artistes pour orienter/évaluer notre clustering par rapportr à cela. Cela pourrait aussi nous permettre d'initialiser les centroïdes de certains clusters avec des œuvres emblématiques, ou d'implémenter une pondération plus intelligente dans la fusion des features.
