@@ -11,14 +11,14 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; background: #0f0f13; color: #e8e6f0; font-family: 'Inter', sans-serif; overflow: hidden; }
 
-/* Layout */
+/* ── Layout ── */
 #app    { display: flex; flex-direction: column; height: 100vh; }
 #topbar { flex-shrink: 0; }
 #main   { display: flex; flex: 1; min-height: 0; }
 #map-col { flex: 1; position: relative; min-width: 0; }
 #deckgl-canvas { width: 100%; height: 100%; }
 
-/* Classes panel (left) */
+/* ── Classes panel (left) ── */
 #class-panel {
   width: 200px; min-width: 200px; background: #12121a;
   border-right: .5px solid #2a2a38; display: flex; flex-direction: column;
@@ -51,12 +51,12 @@ html, body { height: 100%; background: #0f0f13; color: #e8e6f0; font-family: 'In
 .class-check { font-size: 11px; width: 14px; text-align: center; color: #5a5878; }
 .class-row.off .class-check { color: #2a2a38; }
 
-/* Header */
+/* ── Header ── */
 #header { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: .5px solid #2a2a38; }
 #header h1 { font-size: 15px; font-weight: 500; letter-spacing: .05em; color: #c8c4e8; }
 #header span { font-size: 12px; color: #5a5878; font-weight: 300; }
 
-/* Filter bar */
+/* ── Filter bar ── */
 #filterbar { display: flex; align-items: center; gap: 10px; padding: 8px 24px; border-bottom: .5px solid #1e1e2c; flex-wrap: wrap; }
 #filterbar label { font-size: 12px; color: #6a6888; white-space: nowrap; }
 select {
@@ -90,11 +90,11 @@ select:hover { border-color: #7F77DD; }
 #btn-reset { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: .5px solid #3a3a50; background: transparent; color: #8886a8; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s; }
 #btn-reset:hover { border-color: #D85A30; color: #c8c4e8; }
 
-/* Stats bar */
+/* ── Stats bar ── */
 #statsbar { flex-shrink: 0; padding: 5px 24px; background: #0a0a10; border-top: .5px solid #1e1e2c; font-size: 11px; color: #4a4868; display: flex; gap: 16px; }
 #statsbar b { color: #6a6888; font-weight: 500; }
 
-/* Detail panel */
+/* ── Detail panel ── */
 #detail-panel {
   width: 320px; min-width: 320px; background: #12121a;
   border-left: .5px solid #2a2a38; display: flex; flex-direction: column;
@@ -145,7 +145,7 @@ select:hover { border-color: #7F77DD; }
 .artist-bar { height: 3px; border-radius: 2px; }
 .artist-pct { font-size: 10px; color: #5a5878; }
 
-/* Tooltip hover */
+/* ── Tooltip hover ── */
 #tooltip {
   position: fixed; z-index: 1000; pointer-events: none;
   background: rgba(15,15,19,.95); border: .5px solid #3a3a50;
@@ -156,7 +156,7 @@ select:hover { border-color: #7F77DD; }
 #tooltip b { color: #fff; }
 #tooltip small { color: #6a6888; }
 
-/* Loading overlay */
+/* ── Loading overlay ── */
 #loading-overlay {
   position: fixed; inset: 0; background: #0f0f13; z-index: 9999;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -168,7 +168,7 @@ select:hover { border-color: #7F77DD; }
 #loading-bar { height: 100%; background: #7F77DD; border-radius: 2px; width: 0%; transition: width .4s; }
 #loading-msg { font-size: 11px; color: #3a3858; margin-top: 10px; }
 
-/* Minimap */
+/* ── Minimap ── */
 #minimap {
   position: absolute; bottom: 14px; right: 14px; z-index: 90;
   width: 160px; height: 110px; border-radius: 8px; overflow: hidden;
@@ -183,7 +183,7 @@ select:hover { border-color: #7F77DD; }
   box-shadow: 0 0 8px rgba(0,240,255,.7), inset 0 0 8px rgba(0,240,255,.15);
 }
 
-/* Lasso */
+/* ── Lasso ── */
 #lasso-btn {
   font-size: 11px; padding: 4px 10px; border-radius: 20px;
   border: .5px solid #3a3a50; background: transparent; color: #8886a8;
@@ -199,7 +199,7 @@ select:hover { border-color: #7F77DD; }
 .ls-label { color:#5a5878; }
 .ls-val { color:#c8c4e8;font-weight:500; }
 
-/* Histogramme artiste */
+/* ── Histogramme artiste ── */
 #hist-panel {
   width: 190px; min-width: 190px; background: #12121a;
   border-right: .5px solid #2a2a38; display: none; flex-direction: column;
@@ -281,7 +281,9 @@ select:hover { border-color: #7F77DD; }
 </div>
 
 <script>
-// état global
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
 const S = {
   points:       [],
   meta:         null,
@@ -293,20 +295,22 @@ const S = {
   deckgl:       null,
   viewState:    { target: [0, 0], zoom: 3, minZoom: 0, maxZoom: 14 },
   THUMB_ZOOM_THRESHOLD: 6,
-  // miniatures à la demande
+  // C: lazy thumbs
   thumbCache:   {},
   thumbPending: new Set(),
   _thumbTimer:  null,
-  // lasso
+  // E: lasso
   lassoActive:  false,
   lassoStart:   null,
   lassoRect:    null,
   lassoSet:     new Set(),
-  // minimap
+  // D: minimap
   _mmDirty:     true,
 };
 
-// init deck.gl
+// ══════════════════════════════════════════════════════════════
+//  DECK.GL INIT
+// ══════════════════════════════════════════════════════════════
 function initDeck() {
   S.deckgl = new deck.DeckGL({
     container:    'deckgl-canvas',
@@ -328,7 +332,9 @@ function initDeck() {
   });
 }
 
-// construction des layers
+// ══════════════════════════════════════════════════════════════
+//  RENDU DES LAYERS
+// ══════════════════════════════════════════════════════════════
 function buildLayers() {
   if (!S.points.length) return [];
 
@@ -348,7 +354,7 @@ function buildLayers() {
   const zoom = (S.viewState && S.viewState.zoom) || 0;
   const zoomedIn = zoom >= S.THUMB_ZOOM_THRESHOLD;
 
-  // Points de fond (filtre artiste actif)
+  // ── 1. Points de fond (filtre artiste actif) ──────────────
   if (bg.length) {
     layers.push(new deck.ScatterplotLayer({
       id: 'bg',
@@ -360,7 +366,7 @@ function buildLayers() {
     }));
   }
 
-  // Bulles : disque coloré + contour = couleur de classe
+  // ── 2. Bulles : disque coloré + contour = couleur de classe ──
   layers.push(new deck.ScatterplotLayer({
     id: 'bubbles',
     data: filtered,
@@ -399,7 +405,7 @@ function buildLayers() {
     },
   }));
 
-// Vignettes (images) : lazy
+// ── 3. Vignettes (images) : lazy ──────────────────────────
   // Demander les miniatures des points visibles/importants
   const toLoad = filtered.filter(p =>
     (p.i === S.selectedIdx || p.i === S.hoveredIdx || zoomedIn) && !getThumb(p)
@@ -420,12 +426,15 @@ function buildLayers() {
         height: 80,
         mask:   false,
       }),
-      sizeUnits: 'common',
+      sizeUnits: 'common', // Même unité que le ScatterplotLayer (coordonnées graphiques)
       getSize:  d => {
-        const fit = 1.95;
-        if (d.i === S.selectedIdx) return 2.4 * fit;
-        if (d.i === S.hoveredIdx)  return 2.0 * fit;
-        if (zoomedIn)              return 0.55 * fit;
+        // Multiplicateur : 1.95 laisse dépasser un micro-liseré du contour de la bulle.
+        // Passe à 2.0 si tu veux masquer totalement la bulle en dessous.
+        const fit = 1.95; 
+        
+        if (d.i === S.selectedIdx) return 2.4 * fit;  // Diamètre sélectionné
+        if (d.i === S.hoveredIdx)  return 2.0 * fit;  // Diamètre survolé
+        if (zoomedIn)              return 0.55 * fit; // Diamètre normal (zoomé)
         return 0;
       },
       getColor: d => {
@@ -443,7 +452,7 @@ function buildLayers() {
     }));
   }
 
-  // Anneau de sélection (halo blanc)
+  // ── 4. Anneau de sélection (halo blanc) ───────────────────
   if (S.selectedIdx !== null) {
     const sel = filtered.find(p => p.i === S.selectedIdx);
     if (sel) {
@@ -462,7 +471,7 @@ function buildLayers() {
     }
   }
 
-  // Voisins : affichage panneau uniquement, pas sur la carte
+  // ── 5. Voisins : affichage panneau uniquement, pas sur la carte ──
 
   return layers;
 }
@@ -474,7 +483,9 @@ function render() {
   if (S._mmDirty) requestAnimationFrame(drawMinimap);
 }
 
-// événements
+// ══════════════════════════════════════════════════════════════
+//  EVENTS
+// ══════════════════════════════════════════════════════════════
 function handleHover({ object, x, y }) {
   const tt = document.getElementById('tooltip');
   if (object) {
@@ -521,7 +532,9 @@ async function selectPoint(idx) {
   showDetail(data);
 }
 
-// panneau détail
+// ══════════════════════════════════════════════════════════════
+//  PANNEAU DÉTAIL
+// ══════════════════════════════════════════════════════════════
 function showDetailLoading(idx) {
   const pt = S.points.find(p => p.i === idx);
   document.getElementById('detail-panel').innerHTML = `
@@ -567,7 +580,7 @@ function showDetail(d) {
 
   document.getElementById('detail-panel').innerHTML = `
     <div class="detail-img">
-      <img src="assets/abstrait-v4/${d.path}" alt="Œuvre #${d.index}"
+      <img src="${S.assetsPrefix}/${d.path}" alt="Œuvre #${d.index}"
            onerror="this.style.display='none'">
     </div>
     <div class="detail-meta">
@@ -639,7 +652,9 @@ async function runGroq(idx, artist, path) {
 }
 
 
-// chargement à la demande des miniatures
+// ══════════════════════════════════════════════════════════════
+//  C — LAZY LOADING MINIATURES
+// ══════════════════════════════════════════════════════════════
 function getThumb(p) {
   return S.thumbCache[p.i] || p.thumb || null;
 }
@@ -665,7 +680,9 @@ function scheduleThumbs(indices) {
   }, 80);
 }
 
-// minimap
+// ══════════════════════════════════════════════════════════════
+//  D — MINIMAP
+// ══════════════════════════════════════════════════════════════
 let _mmBounds = null;
 function mmBounds() {
   if (_mmBounds) return _mmBounds;
@@ -721,7 +738,9 @@ document.getElementById('mm-canvas').addEventListener('click', e => {
   S.deckgl.setProps({ initialViewState:{ target:[dataX,dataY], zoom: S.viewState.zoom||4, transitionDuration:350 } });
 });
 
-// sélection lasso
+// ══════════════════════════════════════════════════════════════
+//  E — LASSO
+// ══════════════════════════════════════════════════════════════
 const lassoSvg = document.getElementById('lasso-svg');
 const lassoBtn = document.getElementById('lasso-btn');
 
@@ -801,7 +820,9 @@ window.clearLasso = function() {
   render();
 };
 
-// histogramme artiste
+// ══════════════════════════════════════════════════════════════
+//  F — HISTOGRAMME ARTISTE
+// ══════════════════════════════════════════════════════════════
 function updateHistogram() {
   const panel = document.getElementById('hist-panel');
   const bars  = document.getElementById('hist-bars');
@@ -818,7 +839,9 @@ function updateHistogram() {
   }).join('');
 }
 
-// filtres et contrôles
+// ══════════════════════════════════════════════════════════════
+//  FILTRES & CONTRÔLES
+// ══════════════════════════════════════════════════════════════
 function updateStats() {
   let vis = S.filterArtist
     ? S.points.filter(p => p.artist === S.filterArtist)
@@ -829,7 +852,7 @@ function updateStats() {
     `<b>${vis.length}</b> œuvres · <b>${nClusters}</b> classes · scroll=zoom · clic=détail · double-clic=reset`;
 }
 
-// Panneau de gestion des classes
+// ── Panneau de gestion des classes ─────────────────────────────
 function buildClassList() {
   const counts = {};
   S.points.forEach(p => { counts[p.cluster] = (counts[p.cluster]||0) + 1; });
@@ -912,7 +935,7 @@ document.querySelectorAll('.ctog').forEach(btn => {
   });
 });
 
-// Recherche
+// ── Recherche ─────────────────────────────────────────────────
 const searchInput   = document.getElementById('search-input');
 const searchResults = document.getElementById('search-results');
 
@@ -946,7 +969,9 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#search-wrap')) searchResults.style.display = 'none';
 });
 
-// démarrage
+// ══════════════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════════════
 async function boot() {
   initDeck();
 
@@ -973,6 +998,7 @@ async function boot() {
 
   S.points = data.points;
   S.meta   = data.meta;
+  S.assetsPrefix = data.meta.assets_prefix || "assets/abstrait-v4";
   bar.style.width = '80%';
 
   document.getElementById('header-meta').textContent =
@@ -1004,4 +1030,4 @@ async function boot() {
 boot();
 </script>
 </body>
-</html>
+</html><!-- patched: remove this comment in production -->
