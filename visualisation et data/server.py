@@ -1,17 +1,35 @@
+"""
+AbstractViz — serveur Flask
+  GET  /              → index.html
+  GET  /api/data      → JSON de tous les points
+  GET  /api/detail/<idx> → voisins + composition cluster
+  POST /api/groq      → proxy Groq (vision + fallback texte)
+  GET  /assets/...    → images statiques
+"""
+
 import os, json, base64, io
-from scipy.spatial import cKDTree
 import numpy as np
 import pandas as pd
 import requests
 from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory, send_file
-from functools import wraps
 
-# Config
-GROQ_API_KEY  = os.environ.get("GROQ_API_KEY", "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")
-DATA_PATH     = "resultats_clusters.csv"
-ASSETS_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "abstrait-v4")
+# ─────────────────────────────────────────────
+#  CONFIG
+# ─────────────────────────────────────────────
+GROQ_API_KEY  = "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"
+DATA_PATH     = "test data.csv"
 ROOT_DIR      = os.path.dirname(os.path.abspath(__file__))
+
+# Auto-détection du sous-dossier dans assets/
+_assets_root = os.path.join(ROOT_DIR, "assets")
+if os.path.isdir(_assets_root):
+    _subs = [d for d in os.listdir(_assets_root) if os.path.isdir(os.path.join(_assets_root, d))]
+    ASSETS_SUBFOLDER = _subs[0] if _subs else ""
+else:
+    ASSETS_SUBFOLDER = "abstrait-v4"
+ASSETS_FOLDER = os.path.join(ROOT_DIR, "assets", ASSETS_SUBFOLDER)
+print(f"✓ Images : assets/{ASSETS_SUBFOLDER}/ ({len(os.listdir(ASSETS_FOLDER)) if os.path.isdir(ASSETS_FOLDER) else '⚠ INTROUVABLE'} fichiers)")
 
 CLUSTER_COLORS = [
     "#7F77DD","#1D9E75","#D85A30","#D4537E","#EF9F27",
@@ -25,14 +43,16 @@ ARTIST_PALETTE = [
     "#E85D9A","#2A9F6E","#C0622F","#6A5ACD","#3CB371",
 ]
 
-# Données
+# ─────────────────────────────────────────────
+#  DONNÉES
+# ─────────────────────────────────────────────
 if os.path.exists(DATA_PATH):
     df = pd.read_csv(DATA_PATH)
     if "filename" in df.columns and "image_path" not in df.columns:
         df = df.rename(columns={"filename": "image_path"})
-    print(f"{len(df)} œuvres chargées depuis '{DATA_PATH}'")
+    print(f"✓ {len(df)} œuvres chargées depuis '{DATA_PATH}'")
 else:
-    print(f"'{DATA_PATH}' introuvable — données simulées.")
+    print(f"⚠ '{DATA_PATH}' introuvable — données simulées.")
     np.random.seed(42)
     n = 1700
     centers = [(-20,20),(20,20),(0,-25),(-25,-15),(25,-10),(0,0),
@@ -57,15 +77,6 @@ else:
 ARTISTS  = sorted(df["artist"].unique().tolist())
 CLUSTERS = sorted(df["cluster"].unique().tolist())
 
-# KD-Tree pour les voisins
-_coords   = None
-_kdtree   = None
-
-def _build_kdtree():
-    global _coords, _kdtree
-    _coords = df[["x","y"]].values
-    _kdtree = cKDTree(_coords)
-
 def cluster_color(cid):
     return CLUSTER_COLORS[int(cid) % len(CLUSTER_COLORS)]
 
@@ -76,7 +87,9 @@ def hex_to_rgb(h):
     h = h.lstrip("#")
     return [int(h[i:i+2], 16) for i in (0, 2, 4)]
 
-# Miniatures base64 (80px)
+# ─────────────────────────────────────────────
+#  MINIATURES BASE64 (80px) pour l'API /data
+# ─────────────────────────────────────────────
 def encode_thumb(rel_path, size=80):
     full = os.path.join(ASSETS_FOLDER, str(rel_path))
     if not os.path.exists(full):
@@ -85,24 +98,29 @@ def encode_thumb(rel_path, size=80):
         raw = open(full, "rb").read()
         try:
             from PIL import Image as PILImage, ImageDraw
-
+            
+            # Convertir en RGBA pour gérer la transparence
             im = PILImage.open(io.BytesIO(raw)).convert("RGBA")
-
-            # crop carré centré
+            
+            # 1. Recadrer au centre pour avoir un carré parfait
             w, h = im.size
             min_dim = min(w, h)
             left = (w - min_dim) / 2
             top = (h - min_dim) / 2
             im = im.crop((left, top, left + min_dim, top + min_dim))
-
+            
+            # 2. Redimensionner
             im.thumbnail((size, size), PILImage.LANCZOS)
-
-            # masque circulaire
+            
+            # 3. Créer un masque circulaire
             mask = PILImage.new('L', im.size, 0)
             draw = ImageDraw.Draw(mask)
             draw.ellipse((0, 0, im.size[0], im.size[1]), fill=255)
+            
+            # 4. Appliquer le masque pour rendre les coins transparents
             im.putalpha(mask)
-
+            
+            # 5. Sauvegarder obligatoirement en PNG (le JPEG ne supporte pas la transparence)
             buf = io.BytesIO()
             im.save(buf, format="PNG", optimize=True)
             raw = buf.getvalue()
@@ -112,31 +130,18 @@ def encode_thumb(rel_path, size=80):
     except Exception:
         return None
 
-_build_kdtree()
-print(f"KD-Tree construit ({len(df)} nœuds)")
-
-print("Encodage des miniatures…")
+print("⏳ Encodage des miniatures…")
 thumbs = {}
 for _, row in df.iterrows():
     t = encode_thumb(row["image_path"])
     if t:
         thumbs[int(row["index"])] = t
-print(f"{len(thumbs)}/{len(df)} miniatures encodées")
+print(f"✓ {len(thumbs)}/{len(df)} miniatures encodées")
 
-# Flask app
+# ─────────────────────────────────────────────
+#  FLASK APP
+# ─────────────────────────────────────────────
 app = Flask(__name__, static_folder=None)
-
-@app.after_request
-def add_cors(r):
-    r.headers["Access-Control-Allow-Origin"]  = "*"
-    r.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    r.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    return r
-
-@app.route("/api/data",   methods=["OPTIONS"])
-@app.route("/api/groq",   methods=["OPTIONS"])
-@app.route("/api/detail", methods=["OPTIONS"])
-def _options(): return "", 204
 
 @app.route("/")
 def index():
@@ -159,16 +164,17 @@ def api_data():
             "artist":  art,
             "cluster": cid,
             "path":    str(row["image_path"]),
-            "thumb":   thumbs.get(idx),
-            "cc":      cc,
-            "ac":      ac,
+            "thumb":   thumbs.get(idx),        # base64 miniature ou null
+            "cc":      cc,   # cluster color RGB
+            "ac":      ac,   # artist color RGB
         })
     meta = {
-        "n":        len(df),
-        "artists":  ARTISTS,
-        "clusters": CLUSTERS,
-        "cluster_colors": {str(c): cluster_color(c) for c in CLUSTERS},
-        "artist_colors":  {a: artist_color(a) for a in ARTISTS},
+        "n":             len(df),
+        "artists":       ARTISTS,
+        "clusters":      CLUSTERS,
+        "cluster_colors":{str(c): cluster_color(c) for c in CLUSTERS},
+        "artist_colors": {a: artist_color(a) for a in ARTISTS},
+        "assets_prefix": f"assets/{ASSETS_SUBFOLDER}",
     }
     return jsonify({"points": points, "meta": meta})
 
@@ -180,17 +186,19 @@ def api_detail(idx):
         return jsonify({"error": "not found"}), 404
     row = row.iloc[0]
 
-    dists, pos = _kdtree.query([row["x"], row["y"]], k=9)
+    dx   = df["x"] - row["x"]
+    dy   = df["y"] - row["y"]
+    dist = np.sqrt(dx**2 + dy**2)
+    dist = dist.drop(df[df["index"] == idx].index)
+    nn   = dist.nsmallest(8).index
     neighbors = []
-    for d_val, p in zip(dists[1:], pos[1:]):   # skip self
-        r = df.iloc[p]
+    for i in nn:
+        r = df.loc[i]
         neighbors.append({
             "index":    int(r["index"]),
             "artist":   r["artist"],
             "cluster":  int(r["cluster"]),
-            "distance": float(d_val),
-            "x":        float(r["x"]),
-            "y":        float(r["y"]),
+            "distance": float(dist[i]),
         })
 
     cid        = int(row["cluster"])
@@ -285,41 +293,16 @@ def api_groq():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-@app.route("/api/thumbs", methods=["POST"])
-def api_thumbs_batch():
-    """Batch lazy: reçoit indices, retourne miniatures base64 (cache serveur)."""
-    indices = (request.get_json() or {}).get("indices", [])
-    out = {}
-    for idx in indices[:50]:
-        idx = int(idx)
-        if idx not in thumbs:
-            row = df[df["index"] == idx]
-            if len(row):
-                t = encode_thumb(row.iloc[0]["image_path"])
-                if t: thumbs[idx] = t
-        out[idx] = thumbs.get(idx)
-    return jsonify(out)
-
-@app.route("/api/lasso", methods=["POST"])
-def api_lasso():
-    """Points dans un rectangle data."""
-    b = request.get_json() or {}
-    xmin,ymin,xmax,ymax = b.get("xmin",0),b.get("ymin",0),b.get("xmax",0),b.get("ymax",0)
-    mask = (df["x"]>=xmin)&(df["x"]<=xmax)&(df["y"]>=ymin)&(df["y"]<=ymax)
-    sub  = df[mask]
-    return jsonify({
-        "n":       int(len(sub)),
-        "indices": sub["index"].tolist(),
-        "artists": sub["artist"].value_counts().to_dict(),
-        "clusters":{int(k):int(v) for k,v in sub["cluster"].value_counts().items()},
-    })
-
 @app.route("/assets/<path:filename>")
 def serve_asset(filename):
     return send_from_directory(os.path.join(ROOT_DIR, "assets"), filename)
 
+# ─────────────────────────────────────────────
 if __name__ == "__main__":
-    print(f"{len(df)} œuvres | {len(ARTISTS)} artistes | {len(CLUSTERS)} classes")
-    print("http://localhost:5000")
+    print(f"\n{'='*55}")
+    print("  AbstractViz — Flask + deck.gl")
+    print(f"{'='*55}")
+    print(f"  {len(df)} œuvres | {len(ARTISTS)} artistes | {len(CLUSTERS)} classes")
+    print(f"  ➜  http://localhost:5000")
+    print(f"{'='*55}\n")
     app.run(debug=True, port=5000)
