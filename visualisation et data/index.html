@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AbstractViz — Analyse Non Supervisée</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/deck.gl@9.0.0/dist.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: #0f0f13; color: #e8e6f0; font-family: 'Inter', sans-serif; overflow: hidden; }
+
+/* Layout */
+#app    { display: flex; flex-direction: column; height: 100vh; }
+#topbar { flex-shrink: 0; }
+#main   { display: flex; flex: 1; min-height: 0; }
+#map-col { flex: 1; position: relative; min-width: 0; }
+#deckgl-canvas { width: 100%; height: 100%; }
+
+/* Classes panel (left) */
+#class-panel {
+  width: 200px; min-width: 200px; background: #12121a;
+  border-right: .5px solid #2a2a38; display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+#class-panel h4 {
+  font-size: 12px; font-weight: 500; color: #6a6888; letter-spacing: .08em;
+  text-transform: uppercase; padding: 14px 16px 8px;
+}
+.class-actions { display: flex; gap: 6px; padding: 0 16px 10px; }
+.class-actions button {
+  flex: 1; font-size: 10px; padding: 4px 6px; border-radius: 5px;
+  border: .5px solid #3a3a50; background: transparent; color: #8886a8;
+  cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s;
+}
+.class-actions button:hover { border-color: #7F77DD; color: #c8c4e8; }
+.class-row {
+  display: flex; align-items: center; gap: 8px; padding: 6px 16px;
+  cursor: pointer; font-size: 12px; color: #a8a6c8; user-select: none;
+  transition: background .1s;
+}
+.class-row:hover { background: #1a1a24; }
+.class-row.off { opacity: .35; }
+.class-swatch {
+  width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px solid rgba(255,255,255,.15);
+}
+.class-label { flex: 1; }
+.class-count { font-size: 10px; color: #4a4868; font-variant-numeric: tabular-nums; }
+.class-check { font-size: 11px; width: 14px; text-align: center; color: #5a5878; }
+.class-row.off .class-check { color: #2a2a38; }
+
+/* Header */
+#header { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: .5px solid #2a2a38; }
+#header h1 { font-size: 15px; font-weight: 500; letter-spacing: .05em; color: #c8c4e8; }
+#header span { font-size: 12px; color: #5a5878; font-weight: 300; }
+
+/* Filter bar */
+#filterbar { display: flex; align-items: center; gap: 10px; padding: 8px 24px; border-bottom: .5px solid #1e1e2c; flex-wrap: wrap; }
+#filterbar label { font-size: 12px; color: #6a6888; white-space: nowrap; }
+select {
+  background: #1a1a24; border: .5px solid #3a3a50; border-radius: 6px;
+  color: #c8c4e8; font-size: 12px; font-family: 'Inter', sans-serif;
+  padding: 4px 10px; cursor: pointer; outline: none;
+}
+select:hover { border-color: #7F77DD; }
+.sep { width: .5px; height: 16px; background: #2a2a38; margin: 0 4px; }
+#color-toggle { display: flex; gap: 6px; }
+.ctog {
+  font-size: 11px; padding: 4px 10px; border-radius: 20px;
+  border: .5px solid #3a3a50; background: transparent; color: #8886a8;
+  cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s;
+}
+.ctog.active { border-color: #7F77DD; color: #c8c4e8; background: rgba(127,119,221,.12); }
+#search-input {
+  flex: 1; max-width: 300px; background: #1a1a24; border: .5px solid #3a3a50;
+  border-radius: 6px; color: #c8c4e8; font-size: 12px; font-family: 'Inter', sans-serif;
+  padding: 4px 10px; outline: none;
+}
+#search-input:focus { border-color: #7F77DD; }
+#search-results {
+  position: absolute; top: 100%; left: 0; z-index: 200;
+  background: #1a1a24; border: .5px solid #3a3a50; border-radius: 6px;
+  max-height: 220px; overflow-y: auto; min-width: 280px;
+}
+#search-wrap { position: relative; flex: 1; max-width: 300px; }
+.sr-item { padding: 6px 12px; font-size: 12px; color: #a8a6c8; cursor: pointer; }
+.sr-item:hover { background: #2a2a38; }
+#btn-reset { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: .5px solid #3a3a50; background: transparent; color: #8886a8; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s; }
+#btn-reset:hover { border-color: #D85A30; color: #c8c4e8; }
+
+/* Stats bar */
+#statsbar { flex-shrink: 0; padding: 5px 24px; background: #0a0a10; border-top: .5px solid #1e1e2c; font-size: 11px; color: #4a4868; display: flex; gap: 16px; }
+#statsbar b { color: #6a6888; font-weight: 500; }
+
+/* Detail panel */
+#detail-panel {
+  width: 320px; min-width: 320px; background: #12121a;
+  border-left: .5px solid #2a2a38; display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #1a1a24; }
+::-webkit-scrollbar-thumb { background: #3a3a50; border-radius: 2px; }
+
+.panel-placeholder { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; }
+.panel-placeholder .icon { font-size: 36px; margin-bottom: 16px; opacity: .3; }
+.panel-placeholder p { font-size: 13px; color: #4a4868; line-height: 1.7; font-weight: 300; }
+
+.detail-img { width: 100%; background: #0a0a10; display: flex; align-items: center; justify-content: center; padding: 20px; border-bottom: .5px solid #2a2a38; }
+.detail-img img { max-width: 100%; max-height: 240px; object-fit: contain; border-radius: 4px; }
+
+.detail-meta { padding: 14px 18px; border-bottom: .5px solid #1e1e2c; }
+.detail-meta h3 { font-size: 14px; font-weight: 500; color: #c8c4e8; margin-bottom: 10px; }
+.meta-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; border-bottom: .5px solid #1e1e2c; }
+.meta-row:last-child { border-bottom: none; }
+.meta-label { color: #5a5878; }
+.meta-value { color: #a8a6c8; font-weight: 500; display: flex; align-items: center; gap: 5px; }
+.cdot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+.section { padding: 14px 18px; border-bottom: .5px solid #1e1e2c; }
+.section h4 { font-size: 12px; font-weight: 500; color: #6a6888; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.ai-badge { background: #2a1f4a; color: #9f8fe8; font-size: 10px; padding: 2px 7px; border-radius: 10px; letter-spacing: .05em; font-weight: 500; text-transform: none; }
+
+.ai-btn { margin-top: 2px; padding: 6px 14px; background: #1e1640; border: .5px solid #4a3a80; color: #9f8fe8; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s; }
+.ai-btn:hover { background: #2a1f5a; border-color: #7F77DD; }
+.ai-btn:disabled { opacity: .5; cursor: default; }
+.ai-text { font-size: 12px; color: #a8a4c4; line-height: 1.8; font-weight: 300; margin-top: 8px; }
+.ai-text strong { color: #c8c4e8; font-weight: 500; }
+.ai-spin { font-size: 12px; color: #5a5878; font-style: italic; margin-top: 8px; }
+
+.neighbor-item { display: flex; align-items: center; gap: 10px; padding: 5px 4px; border-bottom: .5px solid #1a1a24; cursor: pointer; border-radius: 4px; transition: background .1s; }
+.neighbor-item:last-child { border-bottom: none; }
+.neighbor-item:hover { background: #1a1a24; }
+.nb-rank { font-size: 10px; color: #3a3858; width: 16px; font-weight: 500; }
+.nb-info { flex: 1; }
+.nb-artist { font-size: 12px; color: #8886a8; }
+.nb-id { font-size: 10px; color: #4a4868; }
+.nb-dist { font-size: 10px; color: #5a5878; font-variant-numeric: tabular-nums; }
+
+.artist-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 3px 0; }
+.artist-name { color: #8886a8; }
+.artist-bar-wrap { display: flex; align-items: center; gap: 6px; }
+.artist-bar { height: 3px; border-radius: 2px; }
+.artist-pct { font-size: 10px; color: #5a5878; }
+
+/* Tooltip hover */
+#tooltip {
+  position: fixed; z-index: 1000; pointer-events: none;
+  background: rgba(15,15,19,.95); border: .5px solid #3a3a50;
+  border-radius: 6px; padding: 7px 10px; font-size: 12px;
+  color: #c8c4e8; line-height: 1.5; white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0,0,0,.5); display: none;
+}
+#tooltip b { color: #fff; }
+#tooltip small { color: #6a6888; }
+
+/* Loading overlay */
+#loading-overlay {
+  position: fixed; inset: 0; background: #0f0f13; z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity .5s;
+}
+#loading-overlay.hidden { opacity: 0; pointer-events: none; }
+#loading-title { font-size: 15px; color: #6a6888; letter-spacing: .06em; margin-bottom: 18px; }
+#loading-bar-wrap { width: 200px; height: 2px; background: #1e1e2c; border-radius: 2px; }
+#loading-bar { height: 100%; background: #7F77DD; border-radius: 2px; width: 0%; transition: width .4s; }
+#loading-msg { font-size: 11px; color: #3a3858; margin-top: 10px; }
+
+/* Minimap */
+#minimap {
+  position: absolute; bottom: 14px; right: 14px; z-index: 90;
+  width: 160px; height: 110px; border-radius: 8px; overflow: hidden;
+  background: rgba(10,10,16,.9); border: .5px solid #2a2a38;
+  cursor: pointer;
+}
+#minimap canvas { display: block; width: 100%; height: 100%; }
+#minimap-vp {
+  position: absolute; border: 2px solid #00f0ff;
+  border-radius: 2px; pointer-events: none;
+  background: rgba(0,240,255,.12);
+  box-shadow: 0 0 8px rgba(0,240,255,.7), inset 0 0 8px rgba(0,240,255,.15);
+}
+
+/* Lasso */
+#lasso-btn {
+  font-size: 11px; padding: 4px 10px; border-radius: 20px;
+  border: .5px solid #3a3a50; background: transparent; color: #8886a8;
+  cursor: pointer; font-family: "Inter", sans-serif; transition: all .15s;
+}
+#lasso-btn.active { border-color: #EF9F27; color: #EF9F27; background: rgba(239,159,39,.09); }
+#lasso-svg {
+  position: absolute; inset: 0; pointer-events: none; z-index: 50;
+}
+#lasso-svg.drawing { pointer-events: all; cursor: crosshair; }
+.lasso-section h4 { font-size:12px;font-weight:500;color:#EF9F27;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px; }
+.lasso-stat { display:flex;justify-content:space-between;font-size:12px;padding:3px 0; }
+.ls-label { color:#5a5878; }
+.ls-val { color:#c8c4e8;font-weight:500; }
+
+/* Histogramme artiste */
+#hist-panel {
+  width: 190px; min-width: 190px; background: #12121a;
+  border-right: .5px solid #2a2a38; display: none; flex-direction: column;
+  overflow-y: auto;
+}
+#hist-panel.visible { display: flex; }
+#hist-panel > h4 {
+  font-size:12px;font-weight:500;color:#6a6888;letter-spacing:.07em;
+  text-transform:uppercase;padding:14px 14px 8px;border-bottom:.5px solid #1e1e2c;
+  flex-shrink:0;
+}
+.hbar-row { display:flex;align-items:center;gap:6px;padding:4px 12px; }
+.hbar-label { font-size:11px;color:#7a7898;width:56px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.hbar-bg { flex:1;height:4px;background:#1e1e2c;border-radius:2px; }
+.hbar-fill { height:100%;border-radius:2px;transition:width .3s; }
+.hbar-n { font-size:10px;color:#4a4868;width:24px;text-align:right; }
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topbar">
+    <div id="header">
+      <h1>AbstractViz</h1>
+      <span id="header-meta">chargement…</span>
+    </div>
+    <div id="filterbar">
+      <label>Artiste :</label>
+      <select id="artist-select"><option value="">Tous</option></select>
+      <div class="sep"></div>
+      <label>Couleur :</label>
+      <div id="color-toggle">
+        <button class="ctog active" data-mode="cluster">Par classe</button>
+        <button class="ctog"        data-mode="artist">Par artiste</button>
+      </div>
+      <div class="sep"></div>
+      <div id="search-wrap">
+        <input id="search-input" type="text" placeholder="Rechercher #index ou artiste…">
+        <div id="search-results" style="display:none"></div>
+      </div>
+      <button id="lasso-btn" title="Sélection rectangulaire">⊡ Lasso</button>
+      <button id="btn-reset">✕ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="class-panel">
+      <h4>Classes</h4>
+      <div class="class-actions">
+        <button id="class-all">Tout</button>
+        <button id="class-none">Aucun</button>
+      </div>
+      <div id="class-list"></div>
+    </div>
+    <div id="hist-panel"><h4>Distribution</h4><div id="hist-bars"></div></div>
+    <div id="map-col">
+      <div id="deckgl-canvas"></div>
+      <svg id="lasso-svg"></svg>
+      <div id="minimap"><canvas id="mm-canvas"></canvas><div id="minimap-vp"></div></div>
+    </div>
+    <div id="detail-panel">
+      <div class="panel-placeholder">
+        <div class="icon">◎</div>
+        <p>Survolez un point pour l'aperçu.<br>Cliquez pour explorer l'œuvre en détail.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="statsbar">
+    <span id="stats-text">—</span>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+<div id="loading-overlay">
+  <div id="loading-title">AbstractViz</div>
+  <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
+  <div id="loading-msg">Connexion au serveur…</div>
+</div>
+
+<script>
+// état global
+const S = {
+  points:       [],
+  meta:         null,
+  colorMode:    'cluster',
+  filterArtist: null,
+  hiddenClusters: new Set(),
+  selectedIdx:  null,
+  hoveredIdx:   null,
+  deckgl:       null,
+  viewState:    { target: [0, 0], zoom: 3, minZoom: 0, maxZoom: 14 },
+  THUMB_ZOOM_THRESHOLD: 6,
+  // miniatures à la demande
+  thumbCache:   {},
+  thumbPending: new Set(),
+  _thumbTimer:  null,
+  // lasso
+  lassoActive:  false,
+  lassoStart:   null,
+  lassoRect:    null,
+  lassoSet:     new Set(),
+  // minimap
+  _mmDirty:     true,
+};
+
+// init deck.gl
+function initDeck() {
+  S.deckgl = new deck.DeckGL({
+    container:    'deckgl-canvas',
+    views:        [new deck.OrthographicView({ id: 'ortho', controller: { dragPan: true, scrollZoom: true, doubleClickZoom: true } })],
+    initialViewState: { ...S.viewState },
+    controller:   true,
+    layers:       [],
+    onHover:      handleHover,
+    onClick:      handleClick,
+    onViewStateChange: ({ viewState }) => {
+      const prevZoomed = (S.viewState.zoom || 0) >= S.THUMB_ZOOM_THRESHOLD;
+      S.viewState = viewState;
+      S._mmDirty  = true;
+      const nowZoomed = (viewState.zoom || 0) >= S.THUMB_ZOOM_THRESHOLD;
+      if (prevZoomed !== nowZoomed) render();
+      else requestAnimationFrame(drawMinimap);
+    },
+    getTooltip:   null,   // on gère manuellement
+  });
+}
+
+// construction des layers
+function buildLayers() {
+  if (!S.points.length) return [];
+
+  // Visibilité par classe (panneau de gauche)
+  let visible = S.points.filter(p => !S.hiddenClusters.has(p.cluster));
+
+  const filtered = S.filterArtist
+    ? visible.filter(p => p.artist === S.filterArtist)
+    : visible;
+
+  // Points de fond (grisés) si filtre artiste actif
+  const bg = S.filterArtist
+    ? visible.filter(p => p.artist !== S.filterArtist)
+    : [];
+
+  const layers = [];
+  const zoom = (S.viewState && S.viewState.zoom) || 0;
+  const zoomedIn = zoom >= S.THUMB_ZOOM_THRESHOLD;
+
+  // Points de fond (filtre artiste actif)
+  if (bg.length) {
+    layers.push(new deck.ScatterplotLayer({
+      id: 'bg',
+      data: bg,
+      getPosition: d => [d.x, d.y],
+      getRadius: 0.4,
+      getFillColor: [30, 30, 44, 50],
+      pickable: false,
+    }));
+  }
+
+  // Bulles : disque coloré + contour = couleur de classe
+  layers.push(new deck.ScatterplotLayer({
+    id: 'bubbles',
+    data: filtered,
+    getPosition: d => [d.x, d.y],
+    getRadius: d => {
+      if (d.i === S.selectedIdx) return 2.4;
+      if (d.i === S.hoveredIdx)  return 2.0;
+      return 0.55;
+    },
+    getFillColor: d => {
+      if (S.lassoSet.size > 0 && !S.lassoSet.has(d.i)) return [20, 20, 30, 35];
+      const c = S.colorMode === 'cluster' ? d.cc : d.ac;
+      const showingThumb = getThumb(d) && (d.i === S.hoveredIdx || d.i === S.selectedIdx || zoomedIn);
+      const alpha = showingThumb ? 60 : (d.i === S.selectedIdx ? 255 : d.i === S.hoveredIdx ? 235 : 190);
+      return [...c, alpha];
+    },
+    getLineColor: d => {
+      const cc = d.cc; // toujours le contour = couleur de la classe
+      const alpha = d.i === S.selectedIdx ? 255 : d.i === S.hoveredIdx ? 255 : 220;
+      return [...cc, alpha];
+    },
+    stroked: true,
+    filled: true,
+    getLineWidth: d => (d.i === S.hoveredIdx || d.i === S.selectedIdx) ? 2.5 : 1.2,
+    lineWidthMinPixels: 1,
+    lineWidthUnits: 'pixels',
+    pickable: true,
+    transitions: {
+      getRadius: { duration: 180, easing: t => t * (2 - t) },
+    },
+    updateTriggers: {
+      getRadius:   [S.selectedIdx, S.hoveredIdx],
+      getFillColor:[S.colorMode, S.selectedIdx, S.hoveredIdx, zoomedIn, S.lassoSet.size],
+      getLineColor:[S.colorMode, S.selectedIdx, S.hoveredIdx],
+      getLineWidth: [S.selectedIdx, S.hoveredIdx],
+    },
+  }));
+
+// Vignettes (images) : lazy
+  // Demander les miniatures des points visibles/importants
+  const toLoad = filtered.filter(p =>
+    (p.i === S.selectedIdx || p.i === S.hoveredIdx || zoomedIn) && !getThumb(p)
+  );
+  if (toLoad.length) scheduleThumbs(toLoad.map(p => p.i));
+
+  const withThumb = filtered.filter(p =>
+    (p.i === S.selectedIdx || p.i === S.hoveredIdx || zoomedIn) && getThumb(p)
+  );
+  if (withThumb.length) {
+    layers.push(new deck.IconLayer({
+      id: 'icons',
+      data: withThumb,
+      getPosition:  d => [d.x, d.y],
+      getIcon: d => ({
+        url:    getThumb(d),
+        width:  80,
+        height: 80,
+        mask:   false,
+      }),
+      sizeUnits: 'common',
+      getSize:  d => {
+        const fit = 1.95;
+        if (d.i === S.selectedIdx) return 2.4 * fit;
+        if (d.i === S.hoveredIdx)  return 2.0 * fit;
+        if (zoomedIn)              return 0.55 * fit;
+        return 0;
+      },
+      getColor: d => {
+        if (d.i === S.selectedIdx || d.i === S.hoveredIdx) return [255,255,255,255];
+        return [255,255,255, zoomedIn ? 235 : 0];
+      },
+      pickable: true,
+      transitions: {
+        getSize: { duration: 180, easing: t => t * (2 - t) },
+      },
+      updateTriggers: {
+        getSize:  [S.selectedIdx, S.hoveredIdx, zoomedIn, Object.keys(S.thumbCache).length],
+        getColor: [S.selectedIdx, S.hoveredIdx, zoomedIn, Object.keys(S.thumbCache).length],
+      },
+    }));
+  }
+
+  // Anneau de sélection (halo blanc)
+  if (S.selectedIdx !== null) {
+    const sel = filtered.find(p => p.i === S.selectedIdx);
+    if (sel) {
+      layers.push(new deck.ScatterplotLayer({
+        id: 'sel-ring',
+        data: [sel],
+        getPosition:       d => [d.x, d.y],
+        getRadius:         1.9,
+        getFillColor:      [0, 0, 0, 0],
+        getLineColor:      [255, 255, 255, 220],
+        stroked:           true,
+        filled:            false,
+        lineWidthMinPixels: 2,
+        pickable:          false,
+      }));
+    }
+  }
+
+  // Voisins : affichage panneau uniquement, pas sur la carte
+
+  return layers;
+}
+
+
+function render() {
+  if (!S.deckgl) return;
+  S.deckgl.setProps({ layers: buildLayers() });
+  if (S._mmDirty) requestAnimationFrame(drawMinimap);
+}
+
+// événements
+function handleHover({ object, x, y }) {
+  const tt = document.getElementById('tooltip');
+  if (object) {
+    S.hoveredIdx = object.i;
+    tt.style.display = 'block';
+    tt.style.left    = (x + 14) + 'px';
+    tt.style.top     = (y - 10) + 'px';
+    tt.innerHTML = `<b>#${object.i}</b> — ${object.artist}<br><small>Classe ${object.cluster}</small>`;
+  } else {
+    S.hoveredIdx = null;
+    tt.style.display = 'none';
+  }
+  render();
+}
+
+function handleClick({ object }) {
+  if (!object) return;
+  selectPoint(object.i);
+}
+
+async function selectPoint(idx) {
+  S.selectedIdx   = idx;
+  S._neighborLines = null;
+  S._neighborRings = null;
+  render();
+  showDetailLoading(idx);
+
+  const res  = await fetch(`/api/detail/${idx}`);
+  const data = await res.json();
+
+  // Lignes voisins
+  const sel = S.points.find(p => p.i === idx);
+  if (sel) {
+    S._neighborLines = data.neighbors.map(n => ({ src: [sel.x, sel.y], tgt: [n.x ?? 0, n.y ?? 0] }));
+    // On enrichit les neighbors avec x/y depuis S.points
+    data.neighbors.forEach(n => {
+      const pt = S.points.find(p => p.i === n.index);
+      if (pt) { n.x = pt.x; n.y = pt.y; }
+    });
+    S._neighborLines = data.neighbors.map(n => ({ src: [sel.x, sel.y], tgt: [n.x, n.y] }));
+    S._neighborRings = data.neighbors.map(n => ({ x: n.x, y: n.y }));
+  }
+  render();
+  showDetail(data);
+}
+
+// panneau détail
+function showDetailLoading(idx) {
+  const pt = S.points.find(p => p.i === idx);
+  document.getElementById('detail-panel').innerHTML = `
+    <div style="padding:20px;text-align:center;color:#4a4868;font-size:12px">
+      Chargement #${idx}…
+    </div>`;
+}
+
+function formatAiText(raw) {
+  if (!raw) return '';
+  return raw
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/_(.*?)_/g, '<em>$1</em>')
+    .split('\n').join('<br>');
+}
+
+function showDetail(d) {
+  const cc     = d.cluster_color;
+  const ac     = d.artist_color;
+  const maxC   = Math.max(...d.composition.map(c => c.count));
+  const compHtml = d.composition.map(c => {
+    const isMe = c.artist === d.artist;
+    const col  = isMe ? ac : '#3a3560';
+    const w    = Math.round(c.count / maxC * 80);
+    return `<div class="artist-row">
+      <span class="artist-name" style="${isMe ? `color:${ac};font-weight:500` : ''}">${c.artist}</span>
+      <div class="artist-bar-wrap">
+        <div class="artist-bar" style="width:${w}px;background:${col}"></div>
+        <span class="artist-pct">${c.pct}%</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const nbHtml = d.neighbors.map((n, i) => `
+    <div class="neighbor-item" onclick="selectPoint(${n.index})">
+      <span class="nb-rank">${i+1}</span>
+      <div class="nb-info">
+        <div class="nb-artist">${n.artist}</div>
+        <div class="nb-id">#${n.index} — Classe ${n.cluster}</div>
+      </div>
+      <span class="nb-dist">d=${n.distance.toFixed(2)}</span>
+    </div>`).join('');
+
+  document.getElementById('detail-panel').innerHTML = `
+    <div class="detail-img">
+      <img src="assets/abstrait-v4/${d.path}" alt="Œuvre #${d.index}"
+           onerror="this.style.display='none'">
+    </div>
+    <div class="detail-meta">
+      <h3>Œuvre #${d.index}</h3>
+      <div class="meta-row">
+        <span class="meta-label">Artiste</span>
+        <span class="meta-value">${d.artist}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Classe</span>
+        <span class="meta-value">
+          <span class="cdot" style="background:${cc}"></span>
+          Classe ${d.cluster}
+        </span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">${d.artist} dans cette classe</span>
+        <span class="meta-value">${d.same_ac} œuvres (${d.pct_ac}%)</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">${d.artist} hors classe</span>
+        <span class="meta-value">${d.same_total - d.same_ac} œuvres</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h4>Analyse de l'œuvre <span class="ai-badge">Groq AI</span></h4>
+      <button class="ai-btn" id="ai-btn" onclick="runGroq(${d.index},'${d.artist}','${d.path}')">
+        ✦ Générer l'analyse IA
+      </button>
+      <div id="ai-result"></div>
+    </div>
+
+    <div class="section">
+      <h4>Voisins les plus proches</h4>
+      ${nbHtml}
+    </div>
+
+    <div class="section">
+      <h4>Composition — Classe ${d.cluster}</h4>
+      ${compHtml}
+    </div>`;
+}
+
+async function runGroq(idx, artist, path) {
+  const btn = document.getElementById('ai-btn');
+  const res = document.getElementById('ai-result');
+  if (!btn || !res) return;
+  btn.disabled = true;
+  btn.textContent = '⏳ Analyse en cours…';
+  res.innerHTML = '<div class="ai-spin">Interrogation du modèle vision…</div>';
+
+  try {
+    const r = await fetch('/api/groq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ artist, image_path: path }),
+    });
+    const data = await r.json();
+    if (data.error) {
+      res.innerHTML = `<div class="ai-spin">⚠ ${data.error}</div>`;
+    } else {
+      res.innerHTML = `<div class="ai-text">${formatAiText(data.result)}</div>`;
+    }
+  } catch(e) {
+    res.innerHTML = `<div class="ai-spin">⚠ Erreur réseau</div>`;
+  }
+  btn.style.display = 'none';
+}
+
+
+// chargement à la demande des miniatures
+function getThumb(p) {
+  return S.thumbCache[p.i] || p.thumb || null;
+}
+function scheduleThumbs(indices) {
+  const todo = indices.filter(i => !S.thumbCache[i] && !S.thumbPending.has(i));
+  if (!todo.length) return;
+  todo.forEach(i => S.thumbPending.add(i));
+  clearTimeout(S._thumbTimer);
+  S._thumbTimer = setTimeout(async () => {
+    for (let off = 0; off < todo.length; off += 40) {
+      const batch = todo.slice(off, off + 40);
+      try {
+        const r    = await fetch('/api/thumbs', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({indices: batch}) });
+        const data = await r.json();
+        let changed = false;
+        for (const [k, v] of Object.entries(data)) {
+          S.thumbPending.delete(Number(k));
+          if (v) { S.thumbCache[Number(k)] = v; changed = true; }
+        }
+        if (changed) { S._mmDirty = true; render(); }
+      } catch { batch.forEach(i => S.thumbPending.delete(i)); }
+    }
+  }, 80);
+}
+
+// minimap
+let _mmBounds = null;
+function mmBounds() {
+  if (_mmBounds) return _mmBounds;
+  const xs = S.points.map(p => p.x), ys = S.points.map(p => p.y);
+  _mmBounds = { x0:Math.min(...xs), x1:Math.max(...xs), y0:Math.min(...ys), y1:Math.max(...ys) };
+  return _mmBounds;
+}
+function drawMinimap() {
+  const canvas = document.getElementById('mm-canvas');
+  if (!canvas || !S.points.length) return;
+  const W = canvas.offsetWidth || 160, H = canvas.offsetHeight || 110;
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  const b  = mmBounds();
+  const dx = b.x1-b.x0||1, dy = b.y1-b.y0||1;
+  const sc = Math.min(W/dx, H/dy) * 0.88;
+  const ox = (W - dx*sc)/2, oy = (H - dy*sc)/2;
+  const vis = S.points.filter(p => !S.hiddenClusters.has(p.cluster) && (!S.filterArtist||p.artist===S.filterArtist));
+  ctx.globalAlpha = 0.8;
+  vis.forEach(p => {
+    const c = S.colorMode==='cluster' ? p.cc : p.ac;
+    ctx.fillStyle = `rgb(${c[0]},${c[1]},${c[2]})`;
+    ctx.beginPath();
+    ctx.arc(ox+(p.x-b.x0)*sc, oy+(p.y-b.y0)*sc, 1.2, 0, Math.PI*2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+  // viewport rect
+  if (S.deckgl && S.viewState) {
+    const mapEl = document.getElementById('deckgl-canvas');
+    const mW = mapEl.offsetWidth, mH = mapEl.offsetHeight;
+    const z  = Math.pow(2, S.viewState.zoom||3);
+    const [tx,ty] = S.viewState.target||[0,0];
+    const hw = (mW/2)/z, hh = (mH/2)/z;
+    const vp = document.getElementById('minimap-vp');
+    const vx = (tx-hw-b.x0)*sc+ox, vy = (ty-hh-b.y0)*sc+oy;
+    vp.style.left = Math.max(0,vx)+'px'; vp.style.top = Math.max(0,vy)+'px';
+    vp.style.width = Math.min(W,hw*2*sc)+'px'; vp.style.height = Math.min(H,hh*2*sc)+'px';
+  }
+  S._mmDirty = false;
+}
+document.getElementById('mm-canvas').addEventListener('click', e => {
+  if (!S.points.length) return;
+  const c = e.currentTarget;
+  const r = c.getBoundingClientRect();
+  const b = mmBounds();
+  const dx=b.x1-b.x0||1, dy=b.y1-b.y0||1;
+  const sc = Math.min(c.width/dx, c.height/dy)*0.88;
+  const ox=(c.width-dx*sc)/2, oy=(c.height-dy*sc)/2;
+  const dataX = (e.offsetX-ox)/sc+b.x0;
+  const dataY = (e.offsetY-oy)/sc+b.y0;
+  S.deckgl.setProps({ initialViewState:{ target:[dataX,dataY], zoom: S.viewState.zoom||4, transitionDuration:350 } });
+});
+
+// sélection lasso
+const lassoSvg = document.getElementById('lasso-svg');
+const lassoBtn = document.getElementById('lasso-btn');
+
+function px2data(px, py) {
+  const el = document.getElementById('deckgl-canvas');
+  const W = el.offsetWidth, H = el.offsetHeight;
+  const z = Math.pow(2, S.viewState.zoom||3);
+  const [tx,ty] = S.viewState.target||[0,0];
+  return [tx+(px-W/2)/z, ty+(py-H/2)/z];
+}
+
+lassoBtn.addEventListener('click', () => {
+  S.lassoActive = !S.lassoActive;
+  lassoBtn.classList.toggle('active', S.lassoActive);
+  lassoSvg.classList.toggle('drawing', S.lassoActive);
+  if (!S.lassoActive) lassoSvg.innerHTML = '';
+});
+
+lassoSvg.addEventListener('mousedown', e => {
+  if (!S.lassoActive) return;
+  e.preventDefault();
+  const r = lassoSvg.getBoundingClientRect();
+  S.lassoStart = { x: e.clientX-r.left, y: e.clientY-r.top };
+});
+
+lassoSvg.addEventListener('mousemove', e => {
+  if (!S.lassoActive || !S.lassoStart) return;
+  const r  = lassoSvg.getBoundingClientRect();
+  const cx = e.clientX-r.left, cy = e.clientY-r.top;
+  const x  = Math.min(cx, S.lassoStart.x), y = Math.min(cy, S.lassoStart.y);
+  const w  = Math.abs(cx-S.lassoStart.x), h = Math.abs(cy-S.lassoStart.y);
+  S.lassoRect = {x,y,w,h};
+  lassoSvg.innerHTML = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(239,159,39,.07)" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="5,3" rx="3"/>`;
+});
+
+lassoSvg.addEventListener('mouseup', async e => {
+  if (!S.lassoActive || !S.lassoStart || !S.lassoRect) return;
+  const lr = S.lassoRect;
+  const [x0,y0] = px2data(lr.x, lr.y);
+  const [x1,y1] = px2data(lr.x+lr.w, lr.y+lr.h);
+  const res = await fetch('/api/lasso', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ xmin:Math.min(x0,x1), ymin:Math.min(y0,y1), xmax:Math.max(x0,x1), ymax:Math.max(y0,y1) })
+  });
+  const ld = await res.json();
+  S.lassoSet = new Set(ld.indices);
+  S.lassoStart = null; S.lassoActive = false;
+  lassoBtn.classList.remove('active'); lassoSvg.classList.remove('drawing');
+  scheduleThumbs([...S.lassoSet]);
+  showLassoResult(ld);
+  render();
+});
+
+function showLassoResult(d) {
+  const maxA = Math.max(...Object.values(d.artists));
+  const artH = Object.entries(d.artists).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([a,n])=>{
+    const col = S.meta.artist_colors[a]||'#7F77DD';
+    const w   = Math.round(n/maxA*70);
+    return `<div class="artist-row"><span class="artist-name" style="color:${col}">${a}</span><div class="artist-bar-wrap"><div class="artist-bar" style="width:${w}px;background:${col};opacity:.7"></div><span class="artist-pct">${n}</span></div></div>`;
+  }).join('');
+  const clH = Object.entries(d.clusters).sort((a,b)=>b[1]-a[1]).map(([c,n])=>{
+    const col = S.meta.cluster_colors[String(c)]||'#888';
+    return `<div class="lasso-stat"><span class="ls-label"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};margin-right:5px"></span>Classe ${c}</span><span class="ls-val">${n}</span></div>`;
+  }).join('');
+  document.getElementById('detail-panel').innerHTML = `
+    <div class="section lasso-section"><h4>⊡ Sélection lasso</h4>
+      <div class="lasso-stat"><span class="ls-label">Points</span><span class="ls-val">${d.n}</span></div>
+    </div>
+    <div class="section"><h4>Classes</h4>${clH}</div>
+    <div class="section"><h4>Artistes</h4>${artH}</div>
+    <div style="padding:10px 18px">
+      <button class="ai-btn" onclick="clearLasso()">✕ Effacer la sélection</button>
+    </div>`;
+}
+window.clearLasso = function() {
+  S.lassoSet = new Set(); lassoSvg.innerHTML='';
+  document.getElementById('detail-panel').innerHTML = '<div class="panel-placeholder"><div class="icon">◎</div><p>Survolez un point pour l\'aperçu.<br>Cliquez pour explorer l\'œuvre en détail.</p></div>';
+  render();
+};
+
+// histogramme artiste
+function updateHistogram() {
+  const panel = document.getElementById('hist-panel');
+  const bars  = document.getElementById('hist-bars');
+  if (!S.filterArtist) { panel.classList.remove('visible'); return; }
+  panel.classList.add('visible');
+  const pts    = S.points.filter(p => p.artist===S.filterArtist);
+  const counts = {};
+  pts.forEach(p => { counts[p.cluster]=(counts[p.cluster]||0)+1; });
+  const max = Math.max(...Object.values(counts));
+  bars.innerHTML = Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([c,n])=>{
+    const col = S.meta.cluster_colors[String(c)]||'#888';
+    const w   = Math.round(n/max*80);
+    return `<div class="hbar-row"><span class="hbar-label" style="color:${col}">Cl.${c}</span><div class="hbar-bg"><div class="hbar-fill" style="width:${w}px;background:${col}"></div></div><span class="hbar-n">${n}</span></div>`;
+  }).join('');
+}
+
+// filtres et contrôles
+function updateStats() {
+  let vis = S.filterArtist
+    ? S.points.filter(p => p.artist === S.filterArtist)
+    : S.points;
+  vis = vis.filter(p => !S.hiddenClusters.has(p.cluster));
+  const nClusters = new Set(vis.map(p => p.cluster)).size;
+  document.getElementById('stats-text').innerHTML =
+    `<b>${vis.length}</b> œuvres · <b>${nClusters}</b> classes · scroll=zoom · clic=détail · double-clic=reset`;
+}
+
+// Panneau de gestion des classes
+function buildClassList() {
+  const counts = {};
+  S.points.forEach(p => { counts[p.cluster] = (counts[p.cluster]||0) + 1; });
+
+  const list = document.getElementById('class-list');
+  list.innerHTML = S.meta.clusters.map(c => {
+    const color = S.meta.cluster_colors[String(c)];
+    const off   = S.hiddenClusters.has(c) ? 'off' : '';
+    return `<div class="class-row ${off}" data-cluster="${c}">
+      <span class="class-check">${S.hiddenClusters.has(c) ? '' : '✓'}</span>
+      <span class="class-swatch" style="background:${color}"></span>
+      <span class="class-label">Classe ${c}</span>
+      <span class="class-count">${counts[c]||0}</span>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.class-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const c = Number(row.dataset.cluster);
+      if (S.hiddenClusters.has(c)) S.hiddenClusters.delete(c);
+      else S.hiddenClusters.add(c);
+      buildClassList();
+      updateStats();
+      S._mmDirty = true;
+      render();
+    });
+  });
+}
+
+document.getElementById('class-all').addEventListener('click', () => {
+  S.hiddenClusters.clear();
+  buildClassList();
+  updateStats();
+  render();
+});
+
+document.getElementById('class-none').addEventListener('click', () => {
+  S.meta.clusters.forEach(c => S.hiddenClusters.add(c));
+  buildClassList();
+  updateStats();
+  render();
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  S.filterArtist  = null;
+  S.selectedIdx   = null;
+  S._neighborLines = null;
+  S._neighborRings = null;
+  S.lassoSet      = new Set();
+  lassoSvg.innerHTML = '';
+  document.getElementById('artist-select').value = '';
+  document.getElementById('detail-panel').innerHTML = `
+    <div class="panel-placeholder">
+      <div class="icon">◎</div>
+      <p>Survolez un point pour l'aperçu.<br>Cliquez pour explorer l'œuvre en détail.</p>
+    </div>`;
+  S._mmDirty = true;
+  updateStats();
+  updateHistogram();
+  render();
+});
+
+document.getElementById('artist-select').addEventListener('change', e => {
+  S.filterArtist = e.target.value || null;
+  S.selectedIdx  = null;
+  S._neighborLines = null;
+  S._neighborRings = null;
+  _mmBounds = null; S._mmDirty = true;
+  updateStats();
+  updateHistogram();
+  render();
+});
+
+document.querySelectorAll('.ctog').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.ctog').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    S.colorMode = btn.dataset.mode;
+    render();
+  });
+});
+
+// Recherche
+const searchInput   = document.getElementById('search-input');
+const searchResults = document.getElementById('search-results');
+
+searchInput.addEventListener('input', () => {
+  const q = searchInput.value.trim().toLowerCase();
+  if (!q) { searchResults.style.display = 'none'; return; }
+  const matches = S.points.filter(p =>
+    String(p.i).includes(q) || p.artist.toLowerCase().includes(q)
+  ).slice(0, 20);
+  if (!matches.length) { searchResults.style.display = 'none'; return; }
+  searchResults.innerHTML = matches.map(p =>
+    `<div class="sr-item" onclick="pickSearch(${p.i})">#${p.i} — ${p.artist} (Classe ${p.cluster})</div>`
+  ).join('');
+  searchResults.style.display = 'block';
+});
+
+window.pickSearch = function(idx) {
+  searchInput.value = '';
+  searchResults.style.display = 'none';
+  selectPoint(idx);
+  // Centrer la vue
+  const pt = S.points.find(p => p.i === idx);
+  if (pt && S.deckgl) {
+    S.deckgl.setProps({
+      initialViewState: { target: [pt.x, pt.y], zoom: 6, transitionDuration: 600 }
+    });
+  }
+};
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#search-wrap')) searchResults.style.display = 'none';
+});
+
+// démarrage
+async function boot() {
+  initDeck();
+
+  const overlay = document.getElementById('loading-overlay');
+  const bar     = document.getElementById('loading-bar');
+  const msg     = document.getElementById('loading-msg');
+
+  bar.style.width = '15%';
+  msg.textContent = 'Chargement des données…';
+
+  let data;
+  try {
+    const res = await fetch('/api/data');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    bar.style.width = '55%';
+    msg.textContent = 'Traitement…';
+    data = await res.json();
+  } catch(err) {
+    bar.style.background = '#D85A30';
+    bar.style.width      = '100%';
+    msg.innerHTML = `<span style="color:#D85A30">⚠ ${err.message} — Flask sur <a href="http://localhost:5000" style="color:#EF9F27">localhost:5000</a> ?</span>`;
+    return;
+  }
+
+  S.points = data.points;
+  S.meta   = data.meta;
+  bar.style.width = '80%';
+
+  document.getElementById('header-meta').textContent =
+    `${S.meta.n} œuvres · ${S.meta.artists.length} artistes · ${S.meta.clusters.length} classes`;
+
+  const sel = document.getElementById('artist-select');
+  S.meta.artists.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a; opt.textContent = a;
+    sel.appendChild(opt);
+  });
+
+  buildClassList();
+
+  const xs = S.points.map(p => p.x);
+  const ys = S.points.map(p => p.y);
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+  const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  S.deckgl.setProps({ initialViewState: { target: [cx, cy], zoom: 3 } });
+
+  updateStats();
+  render();
+  setTimeout(drawMinimap, 400);
+
+  bar.style.width = '100%';
+  setTimeout(() => overlay.classList.add('hidden'), 500);
+}
+
+boot();
+</script>
+</body>
+</html>
