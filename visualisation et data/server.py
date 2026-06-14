@@ -18,8 +18,9 @@ from flask import Flask, jsonify, request, send_from_directory, send_file
 #  CONFIG
 # ─────────────────────────────────────────────
 GROQ_API_KEY  = "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"
-DATA_PATH     = "test data.csv"
 ROOT_DIR      = os.path.dirname(os.path.abspath(__file__))
+CSV_FILENAME = "resultats_clusters enguerrand pas de titre pour l'insatnt.csv"
+DATA_PATH = os.path.join(ROOT_DIR, CSV_FILENAME)
 
 # Auto-détection du sous-dossier dans assets/
 _assets_root = os.path.join(ROOT_DIR, "assets")
