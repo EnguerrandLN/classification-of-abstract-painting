@@ -11,14 +11,14 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; background: #0f0f13; color: #e8e6f0; font-family: 'Inter', sans-serif; overflow: hidden; }
 
-/* ── Layout ── */
+/* Layout */
 #app    { display: flex; flex-direction: column; height: 100vh; }
 #topbar { flex-shrink: 0; }
 #main   { display: flex; flex: 1; min-height: 0; }
 #map-col { flex: 1; position: relative; min-width: 0; }
 #deckgl-canvas { width: 100%; height: 100%; }
 
-/* ── Classes panel (left) ── */
+/* Classes panel (left) */
 #class-panel {
   width: 200px; min-width: 200px; background: #12121a;
   border-right: .5px solid #2a2a38; display: flex; flex-direction: column;
@@ -41,6 +41,7 @@ html, body { height: 100%; background: #0f0f13; color: #e8e6f0; font-family: 'In
   transition: background .1s;
 }
 .class-row:hover { background: #1a1a24; }
+.class-row.isolated { outline: 1px solid #7F77DD33; background: #16162080; }
 .class-row.off { opacity: .35; }
 .class-swatch {
   width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
@@ -51,12 +52,12 @@ html, body { height: 100%; background: #0f0f13; color: #e8e6f0; font-family: 'In
 .class-check { font-size: 11px; width: 14px; text-align: center; color: #5a5878; }
 .class-row.off .class-check { color: #2a2a38; }
 
-/* ── Header ── */
+/* Header */
 #header { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: .5px solid #2a2a38; }
 #header h1 { font-size: 15px; font-weight: 500; letter-spacing: .05em; color: #c8c4e8; }
 #header span { font-size: 12px; color: #5a5878; font-weight: 300; }
 
-/* ── Filter bar ── */
+/* Filter bar */
 #filterbar { display: flex; align-items: center; gap: 10px; padding: 8px 24px; border-bottom: .5px solid #1e1e2c; flex-wrap: wrap; }
 #filterbar label { font-size: 12px; color: #6a6888; white-space: nowrap; }
 select {
@@ -90,11 +91,11 @@ select:hover { border-color: #7F77DD; }
 #btn-reset { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: .5px solid #3a3a50; background: transparent; color: #8886a8; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s; }
 #btn-reset:hover { border-color: #D85A30; color: #c8c4e8; }
 
-/* ── Stats bar ── */
+/* Stats bar */
 #statsbar { flex-shrink: 0; padding: 5px 24px; background: #0a0a10; border-top: .5px solid #1e1e2c; font-size: 11px; color: #4a4868; display: flex; gap: 16px; }
 #statsbar b { color: #6a6888; font-weight: 500; }
 
-/* ── Detail panel ── */
+/* Detail panel */
 #detail-panel {
   width: 320px; min-width: 320px; background: #12121a;
   border-left: .5px solid #2a2a38; display: flex; flex-direction: column;
@@ -145,7 +146,7 @@ select:hover { border-color: #7F77DD; }
 .artist-bar { height: 3px; border-radius: 2px; }
 .artist-pct { font-size: 10px; color: #5a5878; }
 
-/* ── Tooltip hover ── */
+/* Tooltip hover */
 #tooltip {
   position: fixed; z-index: 1000; pointer-events: none;
   background: rgba(15,15,19,.95); border: .5px solid #3a3a50;
@@ -156,7 +157,7 @@ select:hover { border-color: #7F77DD; }
 #tooltip b { color: #fff; }
 #tooltip small { color: #6a6888; }
 
-/* ── Loading overlay ── */
+/* Loading overlay */
 #loading-overlay {
   position: fixed; inset: 0; background: #0f0f13; z-index: 9999;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -168,7 +169,7 @@ select:hover { border-color: #7F77DD; }
 #loading-bar { height: 100%; background: #7F77DD; border-radius: 2px; width: 0%; transition: width .4s; }
 #loading-msg { font-size: 11px; color: #3a3858; margin-top: 10px; }
 
-/* ── Minimap ── */
+/* Minimap */
 #minimap {
   position: absolute; bottom: 14px; right: 14px; z-index: 90;
   width: 160px; height: 110px; border-radius: 8px; overflow: hidden;
@@ -183,23 +184,11 @@ select:hover { border-color: #7F77DD; }
   box-shadow: 0 0 8px rgba(0,240,255,.7), inset 0 0 8px rgba(0,240,255,.15);
 }
 
-/* ── Lasso ── */
-#lasso-btn {
-  font-size: 11px; padding: 4px 10px; border-radius: 20px;
-  border: .5px solid #3a3a50; background: transparent; color: #8886a8;
-  cursor: pointer; font-family: "Inter", sans-serif; transition: all .15s;
-}
-#lasso-btn.active { border-color: #EF9F27; color: #EF9F27; background: rgba(239,159,39,.09); }
-#lasso-svg {
-  position: absolute; inset: 0; pointer-events: none; z-index: 50;
-}
-#lasso-svg.drawing { pointer-events: all; cursor: crosshair; }
-.lasso-section h4 { font-size:12px;font-weight:500;color:#EF9F27;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px; }
 .lasso-stat { display:flex;justify-content:space-between;font-size:12px;padding:3px 0; }
 .ls-label { color:#5a5878; }
 .ls-val { color:#c8c4e8;font-weight:500; }
 
-/* ── Histogramme artiste ── */
+/* Histogramme artiste */
 #hist-panel {
   width: 190px; min-width: 190px; background: #12121a;
   border-right: .5px solid #2a2a38; display: none; flex-direction: column;
@@ -240,8 +229,7 @@ select:hover { border-color: #7F77DD; }
         <input id="search-input" type="text" placeholder="Rechercher #index ou artiste…">
         <div id="search-results" style="display:none"></div>
       </div>
-      <button id="lasso-btn" title="Sélection rectangulaire">⊡ Lasso</button>
-      <button id="btn-reset">✕ Réinitialiser</button>
+      <button id="btn-reset">Réinitialiser</button>
     </div>
   </div>
 
@@ -257,12 +245,10 @@ select:hover { border-color: #7F77DD; }
     <div id="hist-panel"><h4>Distribution</h4><div id="hist-bars"></div></div>
     <div id="map-col">
       <div id="deckgl-canvas"></div>
-      <svg id="lasso-svg"></svg>
       <div id="minimap"><canvas id="mm-canvas"></canvas><div id="minimap-vp"></div></div>
     </div>
     <div id="detail-panel">
       <div class="panel-placeholder">
-        <div class="icon">◎</div>
         <p>Survolez un point pour l'aperçu.<br>Cliquez pour explorer l'œuvre en détail.</p>
       </div>
     </div>
@@ -281,9 +267,7 @@ select:hover { border-color: #7F77DD; }
 </div>
 
 <script>
-// ══════════════════════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════════════════════
+// STATE
 const S = {
   points:       [],
   meta:         null,
@@ -293,28 +277,30 @@ const S = {
   selectedIdx:  null,
   hoveredIdx:   null,
   deckgl:       null,
-  viewState:    { target: [0, 0], zoom: 3, minZoom: 0, maxZoom: 14 },
+  viewState:    { target: [0, 0], zoom: 3, minZoom: 0, maxZoom: 20 },
   THUMB_ZOOM_THRESHOLD: 6,
-  // C: lazy thumbs
+  // lazy thumbs
   thumbCache:   {},
   thumbPending: new Set(),
   _thumbTimer:  null,
-  // E: lasso
-  lassoActive:  false,
-  lassoStart:   null,
-  lassoRect:    null,
-  lassoSet:     new Set(),
-  // D: minimap
+  // skip bloom transition on next render (after class toggle)
+  _skipBloomTransition: false,
+  // minimap
   _mmDirty:     true,
+  // bloom — répulsion au zoom
+  bloomOffsets: {},      // idx -> [dx, dy] offsets en coordonnées data
+  _bloomZoom:   null,    // dernier zoom calculé
+  _bloomTimer:  null,
+  // focal bloom — répulsion des points superposés au point hover/sélectionné
+  focalBloomOffsets: {}, // idx -> [dx, dy] offsets supplémentaires
+  _lastFocalIdx: null,   // pour détecter les changements
 };
 
-// ══════════════════════════════════════════════════════════════
-//  DECK.GL INIT
-// ══════════════════════════════════════════════════════════════
+// DECK.GL INIT
 function initDeck() {
   S.deckgl = new deck.DeckGL({
     container:    'deckgl-canvas',
-    views:        [new deck.OrthographicView({ id: 'ortho', controller: { dragPan: true, scrollZoom: true, doubleClickZoom: true } })],
+    views:        [new deck.OrthographicView({ id: 'ortho', controller: { dragPan: true, scrollZoom: { speed: 0.05 }, doubleClickZoom: false } })],
     initialViewState: { ...S.viewState },
     controller:   true,
     layers:       [],
@@ -325,6 +311,9 @@ function initDeck() {
       S.viewState = viewState;
       S._mmDirty  = true;
       const nowZoomed = (viewState.zoom || 0) >= S.THUMB_ZOOM_THRESHOLD;
+      // Recalculer les offsets bloom à chaque changement de zoom (throttlé)
+      clearTimeout(S._bloomTimer);
+      S._bloomTimer = setTimeout(() => { computeBloom(); render(); }, 40);
       if (prevZoomed !== nowZoomed) render();
       else requestAnimationFrame(drawMinimap);
     },
@@ -332,9 +321,195 @@ function initDeck() {
   });
 }
 
-// ══════════════════════════════════════════════════════════════
-//  RENDU DES LAYERS
-// ══════════════════════════════════════════════════════════════
+// BLOOM : répulsion des points superposés au zoom
+//  Principe : on convertit chaque point en pixels, on détecte
+//  les groupes serrés (<MIN_PX px), on les disperse en étoile.
+//  L'offset est en coordonnées "data" et animé via transitions.
+function computeBloom() {
+  if (!S.points.length || !S.viewState) return;
+
+  const zoom   = S.viewState.zoom || 0;
+  const el     = document.getElementById('deckgl-canvas');
+  const W      = el ? el.offsetWidth  : 800;
+  const H      = el ? el.offsetHeight : 600;
+  const z      = Math.pow(2, zoom);
+  const [tx, ty] = S.viewState.target || [0, 0];
+
+  // En dessous de ce zoom → pas de bloom
+  const BLOOM_START_ZOOM = 4.5;
+  if (zoom < BLOOM_START_ZOOM) {
+    S.bloomOffsets = {};
+    return;
+  }
+
+  // Rayon pixel en dessous duquel deux points sont "superposés"
+  const MIN_PX = 18;
+  // Dispersion max en pixels à zoom courant (on convertit ensuite en data)
+  const SPREAD_PX = 28;
+
+  const visible = S.points.filter(p =>
+    !S.hiddenClusters.has(p.cluster) &&
+    (!S.filterArtist || p.artist === S.filterArtist)
+  );
+
+  // Convertir en pixels
+  const pxPos = visible.map(p => ({
+    p,
+    px: W / 2 + (p.x - tx) * z,
+    py: H / 2 + (p.y - ty) * z,
+  }));
+
+  // Trouver les groupes (union-find simplifié : liste de clusters proches)
+  const used    = new Set();
+  const groups  = [];
+
+  for (let i = 0; i < pxPos.length; i++) {
+    if (used.has(i)) continue;
+    const group = [i];
+    used.add(i);
+    for (let j = i + 1; j < pxPos.length; j++) {
+      if (used.has(j)) continue;
+      const dx = pxPos[i].px - pxPos[j].px;
+      const dy = pxPos[i].py - pxPos[j].py;
+      if (Math.hypot(dx, dy) < MIN_PX) {
+        group.push(j);
+        used.add(j);
+      }
+    }
+    if (group.length > 1) groups.push(group);
+  }
+
+  const newOffsets = {};
+
+  for (const group of groups) {
+    const n   = group.length;
+    // Éjection en étoile régulière depuis le centre du groupe
+    group.forEach((idx, k) => {
+      const angle = (2 * Math.PI * k) / n - Math.PI / 2;
+      // Rayon de dispersion : augmente avec le zoom au-dessus du seuil
+      const zoomFactor = Math.min((zoom - BLOOM_START_ZOOM) / 3, 1); // 0..1
+      const spreadPx   = SPREAD_PX * zoomFactor;
+      // Convertir offset pixels → coordonnées data
+      const dxData = (Math.cos(angle) * spreadPx) / z;
+      const dyData = (Math.sin(angle) * spreadPx) / z;
+      newOffsets[pxPos[idx].p.i] = [dxData, dyData];
+    });
+  }
+
+  S.bloomOffsets = newOffsets;
+
+  // Purger les offsets de points qui ne sont plus visibles
+  // (ex: cluster masqué après recalcul) pour éviter qu'ils bougent
+  const visibleIds = new Set(visible.map(p => p.i));
+  for (const id of Object.keys(S.bloomOffsets)) {
+    if (!visibleIds.has(Number(id))) delete S.bloomOffsets[id];
+  }
+}
+
+// FOCAL BLOOM : disposition compacte sans chevauchement
+//  Le focal + ses voisins cachés sont disposés en grille serrée
+//  (cercle hexagonal) : chaque bulle est tangente à ses voisines.
+//  Le focal reste au centre, les autres se placent autour.
+function computeFocalBloom() {
+  const focalIdx = S.selectedIdx !== null ? S.selectedIdx : S.hoveredIdx;
+
+  if (focalIdx === S._lastFocalIdx) return;
+  S._lastFocalIdx = focalIdx;
+
+  if (focalIdx === null || !S.points.length || !S.viewState) {
+    S.focalBloomOffsets = {};
+    return;
+  }
+
+  const zoom = S.viewState.zoom || 0;
+  const el   = document.getElementById('deckgl-canvas');
+  const W    = el ? el.offsetWidth  : 800;
+  const H    = el ? el.offsetHeight : 600;
+  const z    = Math.pow(2, zoom);
+  const [tx, ty] = S.viewState.target || [0, 0];
+
+  // Rayon de capture : points dans ce rayon en px déclenchent le bloom
+  const FOCAL_MIN_PX = 36;
+
+  // Diamètre réel d'une bulle "grossie" en pixels
+  // (radius data = 2.0, converti en px = 2.0 * z)
+  const BUBBLE_RADIUS_DATA = 2.0;
+  const BUBBLE_DIAM_PX = BUBBLE_RADIUS_DATA * 2 * z;
+  // Espacement entre bulles (1px de gap visuel)
+  const GAP_PX = 1;
+  const STEP_PX = BUBBLE_DIAM_PX + GAP_PX;
+
+  const visible = S.points.filter(p =>
+    !S.hiddenClusters.has(p.cluster) &&
+    (!S.filterArtist || p.artist === S.filterArtist)
+  );
+
+  const focalPt = visible.find(p => p.i === focalIdx);
+  if (!focalPt) { S.focalBloomOffsets = {}; return; }
+
+  const focalOff = S.bloomOffsets[focalIdx] || [0, 0];
+  const focalPx  = W / 2 + (focalPt.x + focalOff[0] - tx) * z;
+  const focalPy  = H / 2 + (focalPt.y + focalOff[1] - ty) * z;
+
+  const hidden = visible.filter(p => {
+    if (p.i === focalIdx) return false;
+    const pOff = S.bloomOffsets[p.i] || [0, 0];
+    const px = W / 2 + (p.x + pOff[0] - tx) * z;
+    const py = H / 2 + (p.y + pOff[1] - ty) * z;
+    return Math.hypot(px - focalPx, py - focalPy) < FOCAL_MIN_PX;
+  }).sort((a, b) => a.i - b.i); // tri stable par index → slots constants quel que soit le point survolé
+
+  if (!hidden.length) { S.focalBloomOffsets = {}; return; }
+
+  // Disposition en spirale hexagonale compacte
+  // Génère des positions pixel autour de (0,0) en cercles concentriques
+  // chaque slot est tangent au suivant (step = diamètre bulle + gap).
+  // Position 0 = focal (offset nul), positions 1..n = hidden points.
+  function hexSpiral(count) {
+    const slots = [[0, 0]]; // slot 0 : focal, reste au centre
+    if (count <= 1) return slots;
+    // Anneaux hexagonaux : anneau 1 = 6 slots, anneau 2 = 12, ...
+    let ring = 1;
+    while (slots.length < count) {
+      // Départ en haut du ring
+      let cx = 0, cy = -ring;
+      const dirs = [
+        [ 1,  0], [ 0,  1], [-1,  1],
+        [-1,  0], [ 0, -1], [ 1, -1],
+      ];
+      for (const [dx, dy] of dirs) {
+        for (let s = 0; s < ring; s++) {
+          slots.push([cx, cy]);
+          if (slots.length >= count) break;
+          cx += dx; cy += dy;
+        }
+        if (slots.length >= count) break;
+      }
+      ring++;
+    }
+    return slots;
+  }
+
+  const total = hidden.length + 1; // focal + hidden
+  const slots = hexSpiral(total);
+
+  const newOffsets = {};
+
+  hidden.forEach((p, k) => {
+    // slot 0 = focal, hidden[0] = slot 1, etc.
+    const [gx, gy] = slots[k + 1];
+    // Convertir la grille hexagonale en pixels (step = STEP_PX)
+    // Pour l'hex, la colonne est décalée de 0.5 rang si la ligne est impaire
+    // Mais hexSpiral utilise des coords cubiques axiales → conversion directe
+    const px_offset = gx * STEP_PX + gy * STEP_PX * 0.5;
+    const py_offset = gy * STEP_PX * (Math.sqrt(3) / 2);
+    newOffsets[p.i] = [px_offset / z, py_offset / z];
+  });
+
+  S.focalBloomOffsets = newOffsets;
+}
+
+// RENDU DES LAYERS
 function buildLayers() {
   if (!S.points.length) return [];
 
@@ -354,7 +529,7 @@ function buildLayers() {
   const zoom = (S.viewState && S.viewState.zoom) || 0;
   const zoomedIn = zoom >= S.THUMB_ZOOM_THRESHOLD;
 
-  // ── 1. Points de fond (filtre artiste actif) ──────────────
+  // 1. Points de fond (filtre artiste actif)
   if (bg.length) {
     layers.push(new deck.ScatterplotLayer({
       id: 'bg',
@@ -366,93 +541,126 @@ function buildLayers() {
     }));
   }
 
-  // ── 2. Bulles : disque coloré + contour = couleur de classe ──
+  // Précalcul : position du point focal (sélectionné ou survolé)
+  const focalIdx = S.selectedIdx !== null ? S.selectedIdx : S.hoveredIdx;
+  const focalPt  = focalIdx !== null ? filtered.find(p => p.i === focalIdx) : null;
+
+  // Points déplacés par focalBloom (cachés derrière le focal) : ils doivent aussi grossir
+  const focalBloomed = new Set(Object.keys(S.focalBloomOffsets).map(Number));
+
+  // Rayon d'influence (en coordonnées données) : les points dans ce rayon grossissent
+  const INFLUENCE_RADIUS = 5.0;   // distance en unités "data" autour du focal
+  const NEIGHBOR_SCALE   = 1.55;  // facteur d'agrandissement max des voisins
+
+  function neighborRadius(d) {
+    if (!focalPt || d.i === focalIdx) return 0.55;
+    // Les points déplacés par focalBloom grossissent comme le point survolé
+    if (focalBloomed.has(d.i)) return 2.0;
+    const dist = Math.hypot(d.x - focalPt.x, d.y - focalPt.y);
+    if (dist > INFLUENCE_RADIUS) return 0.55;
+    // Interpolation douce : plus proche du focal = plus gros
+    const t = 1 - dist / INFLUENCE_RADIUS; // 0..1
+    return 0.55 + (0.55 * (NEIGHBOR_SCALE - 1)) * (t * t);
+  }
+
+  // Fonction de position combinant bloomOffsets + focalBloomOffsets
+  function getPosition(d) {
+    const off  = S.bloomOffsets[d.i]      || [0, 0];
+    const foff = S.focalBloomOffsets[d.i] || [0, 0];
+    return [d.x + off[0] + foff[0], d.y + off[1] + foff[1]];
+  }
+
+  // 2. Bulles : disque coloré + contour = couleur de classe
   layers.push(new deck.ScatterplotLayer({
     id: 'bubbles',
     data: filtered,
-    getPosition: d => [d.x, d.y],
+    getPosition: d => getPosition(d),
     getRadius: d => {
       if (d.i === S.selectedIdx) return 2.4;
       if (d.i === S.hoveredIdx)  return 2.0;
-      return 0.55;
+      return neighborRadius(d);
     },
     getFillColor: d => {
-      if (S.lassoSet.size > 0 && !S.lassoSet.has(d.i)) return [20, 20, 30, 35];
       const c = S.colorMode === 'cluster' ? d.cc : d.ac;
-      const showingThumb = getThumb(d) && (d.i === S.hoveredIdx || d.i === S.selectedIdx || zoomedIn);
-      const alpha = showingThumb ? 60 : (d.i === S.selectedIdx ? 255 : d.i === S.hoveredIdx ? 235 : 190);
+      const showingThumb = getThumb(d) && (d.i === S.hoveredIdx || d.i === S.selectedIdx || focalBloomed.has(d.i) || zoomedIn);
+      const alpha = showingThumb ? 60 : (d.i === S.selectedIdx ? 255 : d.i === S.hoveredIdx ? 235 : focalBloomed.has(d.i) ? 220 : 190);
       return [...c, alpha];
     },
     getLineColor: d => {
-      const cc = d.cc; // toujours le contour = couleur de la classe
-      const alpha = d.i === S.selectedIdx ? 255 : d.i === S.hoveredIdx ? 255 : 220;
+      const cc = d.cc;
+      const alpha = d.i === S.selectedIdx ? 255 : d.i === S.hoveredIdx ? 255 : focalBloomed.has(d.i) ? 240 : 220;
       return [...cc, alpha];
     },
     stroked: true,
     filled: true,
-    getLineWidth: d => (d.i === S.hoveredIdx || d.i === S.selectedIdx) ? 2.5 : 1.2,
+    getLineWidth: d => (d.i === S.hoveredIdx || d.i === S.selectedIdx || focalBloomed.has(d.i)) ? 2.5 : 1.2,
     lineWidthMinPixels: 1,
     lineWidthUnits: 'pixels',
     pickable: true,
     transitions: {
-      getRadius: { duration: 180, easing: t => t * (2 - t) },
+      getRadius:   { duration: 180, easing: t => t * (2 - t) },
+      getPosition: S._skipBloomTransition ? { duration: 0 } : { duration: 300, easing: t => t * (2 - t) },
     },
     updateTriggers: {
-      getRadius:   [S.selectedIdx, S.hoveredIdx],
-      getFillColor:[S.colorMode, S.selectedIdx, S.hoveredIdx, zoomedIn, S.lassoSet.size],
-      getLineColor:[S.colorMode, S.selectedIdx, S.hoveredIdx],
-      getLineWidth: [S.selectedIdx, S.hoveredIdx],
+      getPosition: [Object.keys(S.bloomOffsets).length, Object.keys(S.focalBloomOffsets).length, S.viewState.zoom],
+      getRadius:   [S.selectedIdx, S.hoveredIdx, focalIdx, focalBloomed.size],
+      getFillColor:[S.colorMode, S.selectedIdx, S.hoveredIdx, zoomedIn, focalBloomed.size],
+      getLineColor:[S.colorMode, S.selectedIdx, S.hoveredIdx, focalBloomed.size],
+      getLineWidth: [S.selectedIdx, S.hoveredIdx, focalBloomed.size],
     },
   }));
 
-// ── 3. Vignettes (images) : lazy ──────────────────────────
+// 3. Vignettes (images) : lazy
   // Demander les miniatures des points visibles/importants
   const toLoad = filtered.filter(p =>
-    (p.i === S.selectedIdx || p.i === S.hoveredIdx || zoomedIn) && !getThumb(p)
+    (p.i === S.selectedIdx || p.i === S.hoveredIdx || focalBloomed.has(p.i) || zoomedIn) && !getThumb(p)
   );
   if (toLoad.length) scheduleThumbs(toLoad.map(p => p.i));
 
   const withThumb = filtered.filter(p =>
-    (p.i === S.selectedIdx || p.i === S.hoveredIdx || zoomedIn) && getThumb(p)
+    (p.i === S.selectedIdx || p.i === S.hoveredIdx || focalBloomed.has(p.i) || zoomedIn) && getThumb(p)
   );
   if (withThumb.length) {
     layers.push(new deck.IconLayer({
       id: 'icons',
       data: withThumb,
-      getPosition:  d => [d.x, d.y],
+      getPosition:  d => getPosition(d),
       getIcon: d => ({
         url:    getThumb(d),
         width:  80,
         height: 80,
         mask:   false,
       }),
-      sizeUnits: 'common', // Même unité que le ScatterplotLayer (coordonnées graphiques)
+      sizeUnits: 'common',
       getSize:  d => {
-        // Multiplicateur : 1.95 laisse dépasser un micro-liseré du contour de la bulle.
-        // Passe à 2.0 si tu veux masquer totalement la bulle en dessous.
-        const fit = 1.95; 
-        
-        if (d.i === S.selectedIdx) return 2.4 * fit;  // Diamètre sélectionné
-        if (d.i === S.hoveredIdx)  return 2.0 * fit;  // Diamètre survolé
-        if (zoomedIn)              return 0.55 * fit; // Diamètre normal (zoomé)
+        const fit = 1.95;
+        if (d.i === S.selectedIdx)     return 2.4 * fit;
+        if (d.i === S.hoveredIdx)      return 2.0 * fit;
+        if (focalBloomed.has(d.i))     return 2.0 * fit;
+        if (zoomedIn)                  return 0.55 * fit;
         return 0;
       },
       getColor: d => {
-        if (d.i === S.selectedIdx || d.i === S.hoveredIdx) return [255,255,255,255];
+        if (d.i === S.selectedIdx || d.i === S.hoveredIdx || focalBloomed.has(d.i)) return [255,255,255,255];
         return [255,255,255, zoomedIn ? 235 : 0];
       },
       pickable: true,
       transitions: {
-        getSize: { duration: 180, easing: t => t * (2 - t) },
+        getSize:     { duration: 180, easing: t => t * (2 - t) },
+        getPosition: S._skipBloomTransition ? { duration: 0 } : { duration: 300, easing: t => t * (2 - t) },
       },
       updateTriggers: {
-        getSize:  [S.selectedIdx, S.hoveredIdx, zoomedIn, Object.keys(S.thumbCache).length],
-        getColor: [S.selectedIdx, S.hoveredIdx, zoomedIn, Object.keys(S.thumbCache).length],
+        getPosition: [Object.keys(S.bloomOffsets).length, Object.keys(S.focalBloomOffsets).length, S.viewState.zoom],
+        getSize:  [S.selectedIdx, S.hoveredIdx, zoomedIn, focalBloomed.size, Object.keys(S.thumbCache).length],
+        getColor: [S.selectedIdx, S.hoveredIdx, zoomedIn, focalBloomed.size, Object.keys(S.thumbCache).length],
       },
     }));
   }
 
-  // ── 4. Anneau de sélection (halo blanc) ───────────────────
+  // Remettre le flag à false après avoir construit les layers
+  S._skipBloomTransition = false;
+
+  // 4. Anneau de sélection (halo blanc)
   if (S.selectedIdx !== null) {
     const sel = filtered.find(p => p.i === S.selectedIdx);
     if (sel) {
@@ -471,8 +679,7 @@ function buildLayers() {
     }
   }
 
-  // ── 5. Voisins : affichage panneau uniquement, pas sur la carte ──
-
+  // 5. Voisins : affichage panneau uniquement, pas sur la carte
   return layers;
 }
 
@@ -483,26 +690,237 @@ function render() {
   if (S._mmDirty) requestAnimationFrame(drawMinimap);
 }
 
-// ══════════════════════════════════════════════════════════════
-//  EVENTS
-// ══════════════════════════════════════════════════════════════
+// EVENTS
+// Fisheye popup (hover dense zone)
+let _fisheyeTimer = null;
+let _fisheyeVisible = false;
+
+function hideFisheyePopup() {
+  const fp = document.getElementById('fisheye-popup');
+  if (fp) fp.style.display = 'none';
+  _fisheyeVisible = false;
+}
+
+function showFisheyePopup(nearby, cursorX, cursorY) {
+  let fp = document.getElementById('fisheye-popup');
+  if (!fp) {
+    fp = document.createElement('div');
+    fp.id = 'fisheye-popup';
+    document.body.appendChild(fp);
+  }
+
+  // Générer la grille de points (max 12)
+  const pts = nearby.slice(0, 12);
+  const cols = Math.min(pts.length, 4);
+  const rows = Math.ceil(pts.length / cols);
+  const CELL = 56; // px par cellule
+  const PAD  = 10;
+
+  const items = pts.map(p => {
+    const thumb = getThumb(p);
+    const cc = S.colorMode === 'cluster' ? p.cc : p.ac;
+    const colHex = `rgb(${cc[0]},${cc[1]},${cc[2]})`;
+    const imgHtml = thumb
+      ? `<img src="${thumb}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;display:block;">`
+      : `<div style="width:38px;height:38px;border-radius:50%;background:${colHex};opacity:.85;"></div>`;
+    return `<div class="fe-item" data-idx="${p.i}" title="#${p.i} — ${p.artist}">
+      <div class="fe-dot" style="border-color:${colHex}">${imgHtml}</div>
+      <div class="fe-label">#${p.i}</div>
+    </div>`;
+  }).join('');
+
+  fp.innerHTML = `
+    <div class="fe-header">Zone dense · ${nearby.length} points</div>
+    <div class="fe-grid" style="grid-template-columns:repeat(${cols},${CELL}px)">${items}</div>
+  `;
+
+  // Positionner le popup intelligemment
+  const W = window.innerWidth, H = window.innerHeight;
+  const popW = cols * CELL + PAD * 2 + 2;
+  const popH = rows * CELL + 38 + PAD * 2;
+  let left = cursorX + 18;
+  let top  = cursorY - popH / 2;
+  if (left + popW > W - 10) left = cursorX - popW - 12;
+  if (top < 8) top = 8;
+  if (top + popH > H - 8) top = H - popH - 8;
+
+  fp.style.left    = left + 'px';
+  fp.style.top     = top  + 'px';
+  fp.style.display = 'block';
+  _fisheyeVisible  = true;
+
+  // Clics sur les items du popup
+  fp.querySelectorAll('.fe-item').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = Number(el.dataset.idx);
+      hideFisheyePopup();
+      selectPoint(idx);
+    });
+    el.addEventListener('mouseenter', () => {
+      const idx = Number(el.dataset.idx);
+      S.hoveredIdx = idx;
+      render();
+    });
+    el.addEventListener('mouseleave', () => {
+      S.hoveredIdx = null;
+      render();
+    });
+  });
+}
+
 function handleHover({ object, x, y }) {
   const tt = document.getElementById('tooltip');
+
   if (object) {
     S.hoveredIdx = object.i;
-    tt.style.display = 'block';
-    tt.style.left    = (x + 14) + 'px';
-    tt.style.top     = (y - 10) + 'px';
-    tt.innerHTML = `<b>#${object.i}</b> — ${object.artist}<br><small>Classe ${object.cluster}</small>`;
+    computeFocalBloom();
+
+    // Détection zone dense pour fisheye
+    const PIXEL_RADIUS = 36;
+    const el  = document.getElementById('deckgl-canvas');
+    const W   = el.offsetWidth, H = el.offsetHeight;
+    const z   = Math.pow(2, S.viewState.zoom || 3);
+    const [tx, ty] = S.viewState.target || [0, 0];
+
+    const visible = S.points.filter(p =>
+      !S.hiddenClusters.has(p.cluster) &&
+      (!S.filterArtist || p.artist === S.filterArtist)
+    );
+
+    const nearby = visible.filter(p => {
+      const px = W / 2 + (p.x - tx) * z;
+      const py = H / 2 + (p.y - ty) * z;
+      return Math.hypot(px - x, py - y) <= PIXEL_RADIUS;
+    });
+
+    if (nearby.length > 1) {
+      // Zone dense : tooltip simple + fisheye après délai
+      tt.style.display = 'block';
+      tt.style.left    = (x + 14) + 'px';
+      tt.style.top     = (y - 10) + 'px';
+      tt.innerHTML = `<b>${nearby.length} points</b> superposés<br><small>Survol → grille · Clic → zoom</small>`;
+
+      clearTimeout(_fisheyeTimer);
+      _fisheyeTimer = setTimeout(() => {
+        showFisheyePopup(nearby, x, y);
+      }, 280);
+    } else {
+      // Point isolé : tooltip normal
+      hideFisheyePopup();
+      clearTimeout(_fisheyeTimer);
+      tt.style.display = 'block';
+      tt.style.left    = (x + 14) + 'px';
+      tt.style.top     = (y - 10) + 'px';
+      tt.innerHTML = `<b>#${object.i}</b> — ${object.artist}<br><small>Classe ${object.cluster}</small>`;
+    }
   } else {
-    S.hoveredIdx = null;
-    tt.style.display = 'none';
+    // Ne pas cacher le fisheye si la souris est dedans
+    const fp = document.getElementById('fisheye-popup');
+    if (!fp || fp.matches(':hover')) {
+      // souris dans le popup → ne rien faire
+    } else {
+      clearTimeout(_fisheyeTimer);
+      hideFisheyePopup();
+      S.hoveredIdx = null;
+      S.focalBloomOffsets = {};
+      S._lastFocalIdx = null;
+      tt.style.display = 'none';
+    }
   }
   render();
 }
 
-function handleClick({ object }) {
+function handleClick({ object, x, y }) {
   if (!object) return;
+  hideFisheyePopup();
+
+  const PIXEL_RADIUS = 36;
+  const el  = document.getElementById('deckgl-canvas');
+  const W   = el.offsetWidth, H = el.offsetHeight;
+  const z   = Math.pow(2, S.viewState.zoom || 3);
+  const [tx, ty] = S.viewState.target || [0, 0];
+
+  // Position pixel d'un point en tenant compte de TOUS les offsets affichés
+  function displayedPixel(p) {
+    const off  = S.bloomOffsets[p.i]      || [0, 0];
+    const foff = S.focalBloomOffsets[p.i] || [0, 0];
+    return [
+      W / 2 + (p.x + off[0] + foff[0] - tx) * z,
+      H / 2 + (p.y + off[1] + foff[1] - ty) * z,
+    ];
+  }
+
+  const visible = S.points.filter(p =>
+    !S.hiddenClusters.has(p.cluster) &&
+    (!S.filterArtist || p.artist === S.filterArtist)
+  );
+
+  // Chercher d'abord parmi les points grossis (focalBloomed) : ils ont priorité car
+  // ils sont visuellement grands et l'utilisateur vise leur position affichée
+  const focalBloomed = Object.keys(S.focalBloomOffsets).map(Number);
+  if (focalBloomed.length > 0) {
+    // Trouver le point grossi le plus proche du clic (dans leur position affichée)
+    let best = null, bestDist = Infinity;
+    for (const p of visible) {
+      if (!S.focalBloomOffsets[p.i] && p.i !== (S.selectedIdx !== null ? S.selectedIdx : S.hoveredIdx)) continue;
+      const [px, py] = displayedPixel(p);
+      const d = Math.hypot(px - x, py - y);
+      // Rayon de hit = taille bulle grossie en px (radius 2.0 * z)
+      const hitRadius = Math.max(PIXEL_RADIUS, 2.0 * z);
+      if (d <= hitRadius && d < bestDist) { bestDist = d; best = p; }
+    }
+    if (best) { selectPoint(best.i); return; }
+  }
+
+  // Sinon : détection normale sur positions affichées
+  const nearby = visible.filter(p => {
+    const [px, py] = displayedPixel(p);
+    return Math.hypot(px - x, py - y) <= PIXEL_RADIUS;
+  });
+
+  // Si plusieurs points dans le rayon → zoom de zone ciblé
+  if (nearby.length > 1) {
+    const xs = nearby.map(p => p.x);
+    const ys = nearby.map(p => p.y);
+    const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+    const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
+
+    const spanX = Math.max(...xs) - Math.min(...xs);
+    const spanY = Math.max(...ys) - Math.min(...ys);
+    let newZoom;
+    if (spanX < 0.001 && spanY < 0.001) {
+      newZoom = Math.min((S.viewState.zoom || 3) + 3, 20);
+    } else {
+      const span = Math.max(spanX, spanY, 0.001);
+      const targetPixels = Math.min(W, H) * 0.5;
+      const neededZoom = Math.log2(targetPixels / span);
+      newZoom = Math.min(Math.max(neededZoom, (S.viewState.zoom || 3) + 2), 20);
+    }
+
+    if (newZoom <= (S.viewState.zoom || 3) + 0.3) {
+      let best = nearby[0], bestDist = Infinity;
+      for (const p of nearby) {
+        const [px, py] = displayedPixel(p);
+        const d = Math.hypot(px - x, py - y);
+        if (d < bestDist) { bestDist = d; best = p; }
+      }
+      selectPoint(best.i);
+      return;
+    }
+
+    S.deckgl.setProps({
+      initialViewState: {
+        target: [cx, cy],
+        zoom: newZoom,
+        minZoom: 0, maxZoom: 20,
+        transitionDuration: 320,
+      }
+    });
+    return;
+  }
+
+  // Point isolé → sélection directe, sans zoom
   selectPoint(object.i);
 }
 
@@ -513,7 +931,7 @@ async function selectPoint(idx) {
   render();
   showDetailLoading(idx);
 
-  const res  = await fetch(`/api/detail/${idx}`);
+  const res  = await fetch(`/edionnet-24/api/detail/${idx}`);
   const data = await res.json();
 
   // Lignes voisins
@@ -532,9 +950,7 @@ async function selectPoint(idx) {
   showDetail(data);
 }
 
-// ══════════════════════════════════════════════════════════════
-//  PANNEAU DÉTAIL
-// ══════════════════════════════════════════════════════════════
+// PANNEAU DÉTAIL
 function showDetailLoading(idx) {
   const pt = S.points.find(p => p.i === idx);
   document.getElementById('detail-panel').innerHTML = `
@@ -609,7 +1025,7 @@ function showDetail(d) {
     <div class="section">
       <h4>Analyse de l'œuvre <span class="ai-badge">Groq AI</span></h4>
       <button class="ai-btn" id="ai-btn" onclick="runGroq(${d.index},'${d.artist}','${d.path}')">
-        ✦ Générer l'analyse IA
+        Générer l'analyse IA
       </button>
       <div id="ai-result"></div>
     </div>
@@ -630,31 +1046,29 @@ async function runGroq(idx, artist, path) {
   const res = document.getElementById('ai-result');
   if (!btn || !res) return;
   btn.disabled = true;
-  btn.textContent = '⏳ Analyse en cours…';
+  btn.textContent = 'Analyse en cours…';
   res.innerHTML = '<div class="ai-spin">Interrogation du modèle vision…</div>';
 
   try {
-    const r = await fetch('/api/groq', {
+    const r = await fetch('/edionnet-24/api/groq', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ artist, image_path: path }),
     });
     const data = await r.json();
     if (data.error) {
-      res.innerHTML = `<div class="ai-spin">⚠ ${data.error}</div>`;
+      res.innerHTML = `<div class="ai-spin">Erreur : ${data.error}</div>`;
     } else {
       res.innerHTML = `<div class="ai-text">${formatAiText(data.result)}</div>`;
     }
   } catch(e) {
-    res.innerHTML = `<div class="ai-spin">⚠ Erreur réseau</div>`;
+    res.innerHTML = `<div class="ai-spin">Erreur réseau</div>`;
   }
   btn.style.display = 'none';
 }
 
 
-// ══════════════════════════════════════════════════════════════
-//  C — LAZY LOADING MINIATURES
-// ══════════════════════════════════════════════════════════════
+// LAZY LOADING MINIATURES
 function getThumb(p) {
   return S.thumbCache[p.i] || p.thumb || null;
 }
@@ -667,7 +1081,7 @@ function scheduleThumbs(indices) {
     for (let off = 0; off < todo.length; off += 40) {
       const batch = todo.slice(off, off + 40);
       try {
-        const r    = await fetch('/api/thumbs', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({indices: batch}) });
+        const r    = await fetch('/edionnet-24/api/thumbs', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({indices: batch}) });
         const data = await r.json();
         let changed = false;
         for (const [k, v] of Object.entries(data)) {
@@ -680,9 +1094,7 @@ function scheduleThumbs(indices) {
   }, 80);
 }
 
-// ══════════════════════════════════════════════════════════════
-//  D — MINIMAP
-// ══════════════════════════════════════════════════════════════
+// MINIMAP
 let _mmBounds = null;
 function mmBounds() {
   if (_mmBounds) return _mmBounds;
@@ -738,91 +1150,7 @@ document.getElementById('mm-canvas').addEventListener('click', e => {
   S.deckgl.setProps({ initialViewState:{ target:[dataX,dataY], zoom: S.viewState.zoom||4, transitionDuration:350 } });
 });
 
-// ══════════════════════════════════════════════════════════════
-//  E — LASSO
-// ══════════════════════════════════════════════════════════════
-const lassoSvg = document.getElementById('lasso-svg');
-const lassoBtn = document.getElementById('lasso-btn');
-
-function px2data(px, py) {
-  const el = document.getElementById('deckgl-canvas');
-  const W = el.offsetWidth, H = el.offsetHeight;
-  const z = Math.pow(2, S.viewState.zoom||3);
-  const [tx,ty] = S.viewState.target||[0,0];
-  return [tx+(px-W/2)/z, ty+(py-H/2)/z];
-}
-
-lassoBtn.addEventListener('click', () => {
-  S.lassoActive = !S.lassoActive;
-  lassoBtn.classList.toggle('active', S.lassoActive);
-  lassoSvg.classList.toggle('drawing', S.lassoActive);
-  if (!S.lassoActive) lassoSvg.innerHTML = '';
-});
-
-lassoSvg.addEventListener('mousedown', e => {
-  if (!S.lassoActive) return;
-  e.preventDefault();
-  const r = lassoSvg.getBoundingClientRect();
-  S.lassoStart = { x: e.clientX-r.left, y: e.clientY-r.top };
-});
-
-lassoSvg.addEventListener('mousemove', e => {
-  if (!S.lassoActive || !S.lassoStart) return;
-  const r  = lassoSvg.getBoundingClientRect();
-  const cx = e.clientX-r.left, cy = e.clientY-r.top;
-  const x  = Math.min(cx, S.lassoStart.x), y = Math.min(cy, S.lassoStart.y);
-  const w  = Math.abs(cx-S.lassoStart.x), h = Math.abs(cy-S.lassoStart.y);
-  S.lassoRect = {x,y,w,h};
-  lassoSvg.innerHTML = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="rgba(239,159,39,.07)" stroke="#EF9F27" stroke-width="1.5" stroke-dasharray="5,3" rx="3"/>`;
-});
-
-lassoSvg.addEventListener('mouseup', async e => {
-  if (!S.lassoActive || !S.lassoStart || !S.lassoRect) return;
-  const lr = S.lassoRect;
-  const [x0,y0] = px2data(lr.x, lr.y);
-  const [x1,y1] = px2data(lr.x+lr.w, lr.y+lr.h);
-  const res = await fetch('/api/lasso', { method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ xmin:Math.min(x0,x1), ymin:Math.min(y0,y1), xmax:Math.max(x0,x1), ymax:Math.max(y0,y1) })
-  });
-  const ld = await res.json();
-  S.lassoSet = new Set(ld.indices);
-  S.lassoStart = null; S.lassoActive = false;
-  lassoBtn.classList.remove('active'); lassoSvg.classList.remove('drawing');
-  scheduleThumbs([...S.lassoSet]);
-  showLassoResult(ld);
-  render();
-});
-
-function showLassoResult(d) {
-  const maxA = Math.max(...Object.values(d.artists));
-  const artH = Object.entries(d.artists).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([a,n])=>{
-    const col = S.meta.artist_colors[a]||'#7F77DD';
-    const w   = Math.round(n/maxA*70);
-    return `<div class="artist-row"><span class="artist-name" style="color:${col}">${a}</span><div class="artist-bar-wrap"><div class="artist-bar" style="width:${w}px;background:${col};opacity:.7"></div><span class="artist-pct">${n}</span></div></div>`;
-  }).join('');
-  const clH = Object.entries(d.clusters).sort((a,b)=>b[1]-a[1]).map(([c,n])=>{
-    const col = S.meta.cluster_colors[String(c)]||'#888';
-    return `<div class="lasso-stat"><span class="ls-label"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${col};margin-right:5px"></span>Classe ${c}</span><span class="ls-val">${n}</span></div>`;
-  }).join('');
-  document.getElementById('detail-panel').innerHTML = `
-    <div class="section lasso-section"><h4>⊡ Sélection lasso</h4>
-      <div class="lasso-stat"><span class="ls-label">Points</span><span class="ls-val">${d.n}</span></div>
-    </div>
-    <div class="section"><h4>Classes</h4>${clH}</div>
-    <div class="section"><h4>Artistes</h4>${artH}</div>
-    <div style="padding:10px 18px">
-      <button class="ai-btn" onclick="clearLasso()">✕ Effacer la sélection</button>
-    </div>`;
-}
-window.clearLasso = function() {
-  S.lassoSet = new Set(); lassoSvg.innerHTML='';
-  document.getElementById('detail-panel').innerHTML = '<div class="panel-placeholder"><div class="icon">◎</div><p>Survolez un point pour l\'aperçu.<br>Cliquez pour explorer l\'œuvre en détail.</p></div>';
-  render();
-};
-
-// ══════════════════════════════════════════════════════════════
-//  F — HISTOGRAMME ARTISTE
-// ══════════════════════════════════════════════════════════════
+// HISTOGRAMME ARTISTE
 function updateHistogram() {
   const panel = document.getElementById('hist-panel');
   const bars  = document.getElementById('hist-bars');
@@ -839,9 +1167,7 @@ function updateHistogram() {
   }).join('');
 }
 
-// ══════════════════════════════════════════════════════════════
-//  FILTRES & CONTRÔLES
-// ══════════════════════════════════════════════════════════════
+// FILTRES & CONTRÔLES
 function updateStats() {
   let vis = S.filterArtist
     ? S.points.filter(p => p.artist === S.filterArtist)
@@ -849,19 +1175,22 @@ function updateStats() {
   vis = vis.filter(p => !S.hiddenClusters.has(p.cluster));
   const nClusters = new Set(vis.map(p => p.cluster)).size;
   document.getElementById('stats-text').innerHTML =
-    `<b>${vis.length}</b> œuvres · <b>${nClusters}</b> classes · scroll=zoom · clic=détail · double-clic=reset`;
+    `<b>${vis.length}</b> œuvres · <b>${nClusters}</b> classes · scroll=zoom · double-clic=zoom avant · clic=détail (zone dense → zoom de zone) · panneau gauche : double-clic=isoler classe`;
 }
 
-// ── Panneau de gestion des classes ─────────────────────────────
+// Panneau de gestion des classes
 function buildClassList() {
   const counts = {};
   S.points.forEach(p => { counts[p.cluster] = (counts[p.cluster]||0) + 1; });
 
+  const allClusters = S.meta.clusters;
+  const isIsolatedMode = S.hiddenClusters.size === allClusters.length - 1;
   const list = document.getElementById('class-list');
-  list.innerHTML = S.meta.clusters.map(c => {
-    const color = S.meta.cluster_colors[String(c)];
-    const off   = S.hiddenClusters.has(c) ? 'off' : '';
-    return `<div class="class-row ${off}" data-cluster="${c}">
+  list.innerHTML = allClusters.map(c => {
+    const color    = S.meta.cluster_colors[String(c)];
+    const off      = S.hiddenClusters.has(c) ? 'off' : '';
+    const isolated = isIsolatedMode && !S.hiddenClusters.has(c) ? 'isolated' : '';
+    return `<div class="class-row ${off} ${isolated}" data-cluster="${c}" title="Clic : afficher/masquer · Double-clic : isoler">
       <span class="class-check">${S.hiddenClusters.has(c) ? '' : '✓'}</span>
       <span class="class-swatch" style="background:${color}"></span>
       <span class="class-label">Classe ${c}</span>
@@ -874,6 +1203,35 @@ function buildClassList() {
       const c = Number(row.dataset.cluster);
       if (S.hiddenClusters.has(c)) S.hiddenClusters.delete(c);
       else S.hiddenClusters.add(c);
+      // Réinitialiser complètement les offsets bloom pour éviter que les points
+      // restants "bougent" à cause d'anciens offsets calculés avec une composition différente
+      S.bloomOffsets = {};
+      S.focalBloomOffsets = {};
+      S._lastFocalIdx = null;
+      S._skipBloomTransition = true;
+      computeBloom();
+      buildClassList();
+      updateStats();
+      S._mmDirty = true;
+      render();
+    });
+
+    row.addEventListener('dblclick', e => {
+      e.preventDefault();
+      const c = Number(row.dataset.cluster);
+      const allClusters = S.meta.clusters;
+      const isIsolated = S.hiddenClusters.size === allClusters.length - 1 && !S.hiddenClusters.has(c);
+      if (isIsolated) {
+        S.hiddenClusters.clear();
+      } else {
+        S.hiddenClusters.clear();
+        allClusters.forEach(cl => { if (cl !== c) S.hiddenClusters.add(cl); });
+      }
+      S.bloomOffsets = {};
+      S.focalBloomOffsets = {};
+      S._lastFocalIdx = null;
+      S._skipBloomTransition = true;
+      computeBloom();
       buildClassList();
       updateStats();
       S._mmDirty = true;
@@ -884,6 +1242,11 @@ function buildClassList() {
 
 document.getElementById('class-all').addEventListener('click', () => {
   S.hiddenClusters.clear();
+  S.bloomOffsets = {};
+  S.focalBloomOffsets = {};
+  S._lastFocalIdx = null;
+  S._skipBloomTransition = true;
+  computeBloom();
   buildClassList();
   updateStats();
   render();
@@ -891,6 +1254,10 @@ document.getElementById('class-all').addEventListener('click', () => {
 
 document.getElementById('class-none').addEventListener('click', () => {
   S.meta.clusters.forEach(c => S.hiddenClusters.add(c));
+  S.bloomOffsets = {};
+  S.focalBloomOffsets = {};
+  S._lastFocalIdx = null;
+  S._skipBloomTransition = true;
   buildClassList();
   updateStats();
   render();
@@ -901,12 +1268,9 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   S.selectedIdx   = null;
   S._neighborLines = null;
   S._neighborRings = null;
-  S.lassoSet      = new Set();
-  lassoSvg.innerHTML = '';
   document.getElementById('artist-select').value = '';
   document.getElementById('detail-panel').innerHTML = `
     <div class="panel-placeholder">
-      <div class="icon">◎</div>
       <p>Survolez un point pour l'aperçu.<br>Cliquez pour explorer l'œuvre en détail.</p>
     </div>`;
   S._mmDirty = true;
@@ -935,7 +1299,7 @@ document.querySelectorAll('.ctog').forEach(btn => {
   });
 });
 
-// ── Recherche ─────────────────────────────────────────────────
+// Recherche
 const searchInput   = document.getElementById('search-input');
 const searchResults = document.getElementById('search-results');
 
@@ -969,9 +1333,24 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#search-wrap')) searchResults.style.display = 'none';
 });
 
-// ══════════════════════════════════════════════════════════════
-//  BOOT
-// ══════════════════════════════════════════════════════════════
+// Double-clic sur la carte = zoom avant centré sur le curseur
+document.getElementById('deckgl-canvas').addEventListener('dblclick', e => {
+  const el = document.getElementById('deckgl-canvas');
+  const rect = el.getBoundingClientRect();
+  const px = e.clientX - rect.left;
+  const py = e.clientY - rect.top;
+  const z = Math.pow(2, S.viewState.zoom || 3);
+  const [tx, ty] = S.viewState.target || [0, 0];
+  const W = el.offsetWidth, H = el.offsetHeight;
+  const dataX = tx + (px - W / 2) / z;
+  const dataY = ty + (py - H / 2) / z;
+  const newZoom = Math.min((S.viewState.zoom || 3) + 2, 20);
+  S.deckgl.setProps({
+    initialViewState: { target: [dataX, dataY], zoom: newZoom, minZoom: 0, maxZoom: 20, transitionDuration: 350 }
+  });
+});
+
+// BOOT
 async function boot() {
   initDeck();
 
@@ -984,7 +1363,7 @@ async function boot() {
 
   let data;
   try {
-    const res = await fetch('/api/data');
+    const res = await fetch('/edionnet-24/api/data');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     bar.style.width = '55%';
     msg.textContent = 'Traitement…';
@@ -992,7 +1371,7 @@ async function boot() {
   } catch(err) {
     bar.style.background = '#D85A30';
     bar.style.width      = '100%';
-    msg.innerHTML = `<span style="color:#D85A30">⚠ ${err.message} — Flask sur <a href="http://localhost:5000" style="color:#EF9F27">localhost:5000</a> ?</span>`;
+    msg.innerHTML = `<span style="color:#D85A30">${err.message} — Flask sur <a href="http://localhost:5000" style="color:#EF9F27">localhost:5000</a> ?</span>`;
     return;
   }
 
@@ -1017,7 +1396,7 @@ async function boot() {
   const ys = S.points.map(p => p.y);
   const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
   const cy = (Math.min(...ys) + Math.max(...ys)) / 2;
-  S.deckgl.setProps({ initialViewState: { target: [cx, cy], zoom: 3 } });
+  S.deckgl.setProps({ initialViewState: { target: [cx, cy], zoom: 3, minZoom: 0, maxZoom: 20 } });
 
   updateStats();
   render();
@@ -1030,4 +1409,4 @@ async function boot() {
 boot();
 </script>
 </body>
-</html><!-- patched: remove this comment in production -->
+</html>
