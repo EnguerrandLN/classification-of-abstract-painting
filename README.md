@@ -1,50 +1,49 @@
 # Unsupervised Classification of Abstract Art
 
-This repository contains the complete pipeline for the unsupervised classification of an abstract painting corpus (1,700 works). The project focuses on organizing abstract art by purely visual properties, without relying on artist metadata, historical labels, or biographical context.
+Welcome to the projet-im06 repository. This project explores the unsupervised classification of abstract paintings using a multimodal Artificial Intelligence pipeline. 
 
-## Project Overview
+Abstract art lacks semantic objects (like faces or landscapes) that standard computer vision models rely on. To solve this, our pipeline extracts pure stylistic signatures by fusing three distinct feature spaces: Classical Geometric Descriptors, Variational Autoencoders (VAE), and Convolutional Neural Networks (CNN).
 
-Abstract art presents a unique challenge for computer vision because it lacks the semantic objects (faces, landscapes, etc.) that characterize figurative datasets. This project addresses this by fusing three complementary approaches:
-1. **Geometric Descriptors**: Extracting low-level features like color distribution, texture patterns, and compositional structure.
-2. **Variational Autoencoders (VAE)**: Learning a continuous latent representation of stylistic variations.
-3. **Convolutional Neural Networks (CNN)**: Utilizing pre-trained VGG16 models and Gram matrices to capture complex texture and stylistic signatures independent of spatial location.
+## My Core Contributions
+While this was a collaborative academic project, I was personally responsible for the computer vision feature extraction, the algorithmic clustering refinement, and the data engineering. My specific contributions include:
 
-
+* **CNN Feature Extraction:** Designed and implemented a custom pipeline using VGG16 to extract texture-based style signatures via Gram matrices, deliberately bypassing semantic object recognition.
+* **Multimodal Fusion:** Engineered the weighted alpha-blending logic to normalize, standardize, and fuse the CNN, VAE, and geometric feature spaces into a cohesive mathematical topology.
+* **Adaptive Skimming (Core Silhouette):** Developed a custom statistical filtering algorithm that purifies K-Means clusters by dynamically calculating exclusion thresholds based on the median Silhouette score of each cluster's "core."
+* **Data Visualization & Pipeline Engineering:** Wrote the topological validation scripts (Inter-Artist cosine matrices, stylistic heatmaps) and built the Python pipelines to clean, format, and physically sort the dataset for the final WebGL application.
 
 ## Repository Architecture
 
-The project is structured into modular components:
+The project has been refactored into a clean, modular structure.
 
-* **`cnn/`**: Contains the computer vision extraction pipeline. Includes VGG16-based style extraction using Gram matrices and PCA-reduced feature matrices.
-* **`classification/`**: The core clustering engine. Includes multimodal fusion, K-Means implementation, Adaptive Skimming (Core Silhouette) for cluster purification, and final validation metrics.
-* **`features/`**: Computes classical geometric and low-level computer vision features (color palettes, edge detection).
-* **`latent_space/`**: Training and implementation of the $\beta$-VAE for structural and chromatic latent representations.
-* **`abstrait-v4/`**: The self-contained abstract art dataset.
-* **`visualisation et data/`**: Contains the assets and code for the custom interactive WebGL visualization tool.
-* **`rapports/` & `papers/`**: Research documentation and the final academic report.
+### 1. cnn/ (CNN Models & Features)
+*Contains the computer vision extraction pipeline.*
+* **cnn.ipynb**: Extracts high-level stylistic features (Gram matrices across 4 VGG16 layers, averaged over 10 random crops per image to ensure spatial robustness).
+* **cnn_features_pca.npy**: The resulting PCA-reduced feature matrix. *(Note: Raw ~1.5GB tensors are excluded for repository performance).*
 
-## Methodology
+### 2. classification/ (Fusion, Clustering & Final Results)
+*Contains the clustering engine and statistical validation logic.*
+* **melange_features_CNN.ipynb**: The core script performing multimodal fusion, K-Means clustering, and the Adaptive Skimming algorithm.
+* **classification_finale_oeuvres.csv** & **results_clusters.csv**: The final sanitized data outputs formatting the clusters.
+* **lavraieclassification.png**: The stylometric heatmap validating the final clustering.
+* **classification_finale/**: A directory where the dataset is physically sorted into AI-determined movements (C0-C19 for main clusters, A0-A9 for re-clustered marginals).
 
-The pipeline follows a structured three-stage approach:
+### 3. features/ (Geometric & Raw Extraction)
+* **features.ipynb**: Computes classical geometric and low-level computer vision features (color palettes, edge detection).
+* **features.pkl** & **features_brutes.pkl**: Pre-computed geometric outputs.
 
-1.  **Feature Extraction**: Harmonization of three disparate feature spaces (geometric, latent VAE, and CNN-Gram) through L2 normalization and standard scaling.
-2.  **Multimodal Fusion**: Concatenation of the standardized feature spaces into a cohesive high-dimensional "super-vector."
-3.  **Refined Clustering**:
-    * **K-Means Partitioning**: Initial discretization of the latent space.
-    * **Adaptive Skimming**: A custom statistical filtering algorithm that purifies heterogeneous clusters. It calculates an exclusion threshold ($\tau_k$) based on the median Silhouette score of each cluster's "core," reassigning outliers to a marginal set ($C_{-1}$) for recursive sub-clustering.
+### 4. latent_space/ (Latent Space & Autoencoders)
+* **latent-space-vae.ipynb**: Trains a Variational Autoencoder (VAE) to capture structural and chromatic variations.
+* **latent_vectors.npy** & **fused_vectors.npy**: The resulting latent space representations.
 
+### 5. Root Directories
+* **abstrait-v4/**: The complete, self-contained abstract art dataset.
+* **visualisation et data/**: Contains the code and assets for our custom interactive WebGL (deck.gl) 2D map. Read the included tutorial file to run it locally.
+* **rapports/** & **papers/**: Research papers, state-of-the-art literature, and our final academic report.
 
+## How to Use
 
-## Final Results
+This repository is plug-and-play. You can clone the project and immediately explore the notebooks. The dataset is fully included, and the heavy CNN processing has been cached into lightweight `.npy` and `.pkl` files, allowing you to run the clustering and fusion engines (`classification/melange_features_CNN.ipynb`) out-of-the-box.
 
-The final classification is available in the `classification_finale/` directory. The dataset has been physically organized into folders corresponding to the AI-identified movements:
-* **C0–C19**: Main homogeneous stylistic clusters.
-* **A0–A9**: Sub-clusters of marginal artworks isolated through the recursive skimming process.
-
-## Requirements
-
-* **Language**: Python 3.x
-* **Libraries**: `torch`, `torchvision`, `scikit-learn`, `pandas`, `numpy`, `matplotlib`, `seaborn`
-* **Data**: The `abstrait-v4` dataset is provided within the repository.
-
-Developed for the IM06 Project - Télécom Paris.
+---
+*Developed for the IM06 Project — Télécom Paris.*
