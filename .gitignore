@@ -199,8 +199,6 @@ cython_debug/
 #   that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
 #   and can be added to the global gitignore or merged into this file. However, if you prefer,
 
-# Project specific
-visualisation et data/assets/abstrait-v4/ 
 #   you could uncomment the following to ignore the entire vscode folder
 # .vscode/
 # Temporary file for partial code execution
@@ -219,4 +217,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
-X_cnn_features.npy
+
+# Project specific
+# embeddings caches and other regenerable outputs
+outputs/
+# macOS
+.DS_Store
