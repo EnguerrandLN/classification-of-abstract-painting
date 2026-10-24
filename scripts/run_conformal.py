@@ -35,10 +35,10 @@ N_SIM = 5
 NOISES = {"gaussian": None, "student-t (3 df)": 3.0}
 # name -> (method, score model, has a conformal guarantee)
 METHODS = {
-    "split · mixture": ("split", "mixture", True),
-    "weighted · mixture": ("weighted", "mixture", True),
-    "split · classifier": ("split", "classifier", True),
-    "weighted · classifier": ("weighted", "classifier", True),
+    "split, mixture score": ("split", "mixture", True),
+    "weighted, mixture score": ("weighted", "mixture", True),
+    "split, classifier": ("split", "classifier", True),
+    "weighted, classifier": ("weighted", "classifier", True),
     "hard labels (baseline)": ("hard", "classifier", False),
     "cutoff (baseline)": ("cutoff", "mixture", False),
 }
@@ -159,7 +159,7 @@ def main():
           f"## Simulations with known latent labels ({N_SIM} synthetic corpora per noise model)", "",
           "Coverage columns are per layer (marginal sets); sizes are those of the hierarchical sets.", "",
           sim_table.to_markdown(index=False, floatfmt=".3f"), "",
-          f"**Chosen: {chosen}** — smallest sets among the methods with a conformal guarantee that reach "
+          f"**Chosen: {chosen}**, the smallest sets among the methods with a conformal guarantee that reach "
           f"{target:.2f} coverage at every layer and simultaneously, under both noise models.", "",
           f"Note on the rule: without the guarantee filter it would pick **{first_rule}** here. In a first run, "
           "before the mixture score model (Remark 1 of the first paper) was added, the unfiltered rule picked the "

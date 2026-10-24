@@ -62,11 +62,11 @@ def render(card, heading: str) -> list[str]:
     facets = "; ".join(f"**{facet}**: " + ", ".join(f"{t} ({z:+.1f})" for t, z in card.terms[facet])
                        for facet in FACETS if card.terms[facet])
     desc = ", ".join(f"{d.replace('_', ' ')} {z:+.1f}σ" for d, z in card.descriptors)
-    movement = f" · movement proxy: {card.movement[0]} ({card.movement[1]:.0%})" if card.movement else ""
-    return [f"{heading} — {card.title}", "",
+    movement = f", movement proxy: {card.movement[0]} ({card.movement[1]:.0%})" if card.movement else ""
+    return [f"{heading}: {card.title}", "",
             f"{card.size} paintings ({card.core} core){movement}", "",
-            f"- Vocabulary: {facets or '—'}",
-            f"- Measured: {desc or '—'}",
+            f"- Vocabulary: {facets or 'none'}",
+            f"- Measured: {desc or 'none'}",
             "- Artists: " + ", ".join(f"{a} ({n})" for a, n in card.artists),
             "- Most central works: " + ", ".join(card.exemplars), ""]
 
@@ -113,7 +113,7 @@ def main():
     md = ["# Cluster cards", "",
           f"Families (layer {coarsest}) are contrasted with the whole corpus, sub-groups (layer {coarsest - 1}) "
           "with their family. Numbers are mean z-scores of the core paintings: vocabulary terms are SigLIP 2 "
-          f'image–text similarities to "{TEMPLATE.format("…")}", descriptors are defined in '
+          f'image-text similarities to "{TEMPLATE.format("...")}", descriptors are defined in '
           "`src/abstractart/descriptors.py`.", ""]
     for fam in families:
         md += render(fam, f"## Family {fam.cluster}")

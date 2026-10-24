@@ -102,7 +102,7 @@ dl { margin: 6px 0 0; } dt { font-weight: 600; font-size: 12px; margin-top: 8px;
       <input id="search" list="artists" placeholder="Find an artist…" aria-label="Find an artist">
       <datalist id="artists"></datalist>
     </div>
-    <div id="hint">Scroll to zoom · drag to pan · click a painting · Esc to reset</div>
+    <div id="hint">Scroll to zoom, drag to pan, click a painting, press Esc to reset</div>
     <div id="tip"></div>
   </div>
   <aside>
@@ -222,7 +222,7 @@ function renderDetail() {
   const p = P[selected], here = clusterInfo(view, layerIdx, selected);
   const others = Object.keys(VIEWS).filter(v => v !== view).map(v => {
     const c = clusterInfo(v, 0, selected);
-    return `<dt>${esc(VIEWS[v].label)} view</dt><dd>${esc(c.info.title || "—")}${c.core ? "" : " <span class='muted'>(transitional)</span>"}</dd>`;
+    return `<dt>${esc(VIEWS[v].label)} view</dt><dd>${esc(c.info.title || "none")}${c.core ? "" : " <span class='muted'>(transitional)</span>"}</dd>`;
   }).join("");
   d.innerHTML = `
     <h2>Selected painting <button class="close" id="close" aria-label="Close">✕</button></h2>
@@ -230,7 +230,7 @@ function renderDetail() {
     <p><strong>${esc(pretty(p.a))}</strong> <span class="muted">${esc(p.f)}</span>
        <span class="badge">${(layer().core_names || ["transitional", "core"])[here.core ? 1 : 0]}</span></p>
     <dl>
-      <dt>${esc(layer().name)}</dt><dd>${esc(here.info.title || "—")}</dd>
+      <dt>${esc(layer().name)}</dt><dd>${esc(here.info.title || "none")}</dd>
       ${layer().sets ? `<dd class="muted">${esc(layer().sets_label)}: ${layer().sets[selected].map(c =>
         esc((layer().clusters[String(c)] || {}).title || "group " + c)).join(" <strong>or</strong> ")}</dd>` : ""}
       ${here.info.terms ? `<dd class="muted">${termsText(here.info.terms)}</dd>` : ""}
@@ -299,7 +299,7 @@ canvas.addEventListener("pointermove", e => {
   if (i < 0) { tip.style.display = "none"; return; }
   const c = clusterInfo(view, layerIdx, i);
   tip.innerHTML = `<img src="thumbs/${encodeURIComponent(P[i].f)}" alt=""><div><strong>${esc(pretty(P[i].a))}</strong><br>
-    <span class="muted">${esc(c.info.title || "")}${c.core ? "" : " · transitional"}</span></div>`;
+    <span class="muted">${esc(c.info.title || "")}${c.core ? "" : ", transitional"}</span></div>`;
   tip.style.display = "block";
   tip.style.left = Math.min(e.offsetX + 14, W - 200) + "px"; tip.style.top = Math.min(e.offsetY + 14, H - 240) + "px";
 });

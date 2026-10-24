@@ -42,7 +42,7 @@ class Card:
     def title(self) -> str:
         """The two most distinctive terms, from different facets."""
         best = sorted(((z, t) for facet in self.terms.values() for t, z in facet[:1]), reverse=True)[:2]
-        return " · ".join(t for _, t in best) or "no distinctive term"
+        return ", ".join(t for _, t in best) or "no distinctive term"
 
 
 def make_card(layer: int, cluster: int, parent: int | None, members: np.ndarray, core: np.ndarray,

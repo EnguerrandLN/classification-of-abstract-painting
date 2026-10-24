@@ -80,7 +80,7 @@ def name_clusters(labels, core, term_sim, descriptors, facets, groups, excluded)
         top = [(TERMS[term_idx[j]][1], float(tz[j])) for j in np.argsort(-tz)[:3] if tz[j] >= MIN_TERM_Z]
         dz = contrast(D, rows, everyone)
         meas = [(desc_cols[j], float(dz[j])) for j in np.argsort(-np.abs(dz))[:3] if abs(dz[j]) >= 0.4]
-        out[int(c)] = {"title": " · ".join(t for t, _ in top[:2]) or "no distinctive term",
+        out[int(c)] = {"title": ", ".join(t for t, _ in top[:2]) or "no distinctive term",
                        "terms": top, "measured": meas, "size": int((labels == c).sum()),
                        "core": int(((labels == c) & core).sum())}
     # Clusters sharing the same two top terms are told apart by their third term or main measurement
@@ -90,7 +90,7 @@ def name_clusters(labels, core, term_sim, descriptors, facets, groups, excluded)
             extra = c["terms"][2][0] if len(c["terms"]) > 2 else (
                 f"{c['measured'][0][0].replace('_', ' ')} {'high' if c['measured'][0][1] > 0 else 'low'}"
                 if c["measured"] else "")
-            c["title"] = f"{c['title']} · {extra}" if extra else c["title"]
+            c["title"] = f"{c['title']}, {extra}" if extra else c["title"]
     return out
 
 
@@ -176,13 +176,13 @@ def main():
                     "layers": [{"name": f"{info['clusters']} {v} groups", "labels": labels.tolist(),
                                 "core": core.astype(int).tolist(), "clusters": {str(k): c for k, c in named.items()}}]}
         report += [f"## {v.capitalize()} view", "",
-                   f"EVoC {info['params']} — most stable readable layer: {info['clusters']} clusters, "
+                   f"EVoC with {info['params']}. Most stable readable layer: {info['clusters']} clusters, "
                    f"{info['coverage']:.0%} core, stability {info['stability']:.2f}.", "",
                    pd.DataFrame(info["grid"]).to_markdown(index=False), "",
                    "| cluster | size (core) | most distinctive terms | measured |", "|--:|--:|:--|:--|"]
         for k, c in sorted(named.items(), key=lambda kv: -kv[1]["size"]):
-            terms = ", ".join(f"{t} ({z:+.1f})" for t, z in c["terms"]) or "—"
-            meas = ", ".join(f"{d.replace('_', ' ')} {z:+.1f}σ" for d, z in c["measured"]) or "—"
+            terms = ", ".join(f"{t} ({z:+.1f})" for t, z in c["terms"]) or "none"
+            meas = ", ".join(f"{d.replace('_', ' ')} {z:+.1f}σ" for d, z in c["measured"]) or "none"
             report.append(f"| {k} | {c['size']} ({c['core']}) | {terms} | {meas} |")
         report.append("")
         print(f"{v}: {info}")

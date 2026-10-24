@@ -17,7 +17,7 @@ Kept: colour, structure. Dropped: composition.
 
 ## Colour view
 
-EVoC {'noise_level': 0.5, 'base_min_cluster_size': 10, 'n_neighbors': 30} — most stable readable layer: 5 clusters, 64% core, stability 0.75.
+EVoC with {'noise_level': 0.5, 'base_min_cluster_size': 10, 'n_neighbors': 30}. Most stable readable layer: 5 clusters, 64% core, stability 0.75.
 
 |   noise_level |   base_min_cluster_size |   n_neighbors |   layer |   clusters |   coverage |   stability |
 |--------------:|------------------------:|--------------:|--------:|-----------:|-----------:|------------:|
@@ -38,7 +38,7 @@ EVoC {'noise_level': 0.5, 'base_min_cluster_size': 10, 'n_neighbors': 30} — mo
 
 ## Structure view
 
-EVoC {'noise_level': 0.5, 'base_min_cluster_size': 10, 'n_neighbors': 30} — most stable readable layer: 18 clusters, 57% core, stability 0.87.
+EVoC with {'noise_level': 0.5, 'base_min_cluster_size': 10, 'n_neighbors': 30}. Most stable readable layer: 18 clusters, 57% core, stability 0.87.
 
 |   noise_level |   base_min_cluster_size |   n_neighbors |   layer |   clusters |   coverage |   stability |
 |--------------:|------------------------:|--------------:|--------:|-----------:|-----------:|------------:|
@@ -51,7 +51,7 @@ EVoC {'noise_level': 0.5, 'base_min_cluster_size': 10, 'n_neighbors': 30} — mo
 
 | cluster | size (core) | most distinctive terms | measured |
 |--:|--:|:--|:--|
-| 14 | 200 (101) | watercolour washes (+1.0), dripped and splattered paint (+0.7), a landscape horizon (+0.6) | — |
+| 14 | 200 (101) | watercolour washes (+1.0), dripped and splattered paint (+0.7), a landscape horizon (+0.6) | none |
 | 0 | 166 (89) | a rough material surface (+0.8), thick impasto paint (+0.5), dripped and splattered paint (+0.4) | spectral slope -0.8σ, orientation entropy +0.5σ, rectilinearity -0.4σ |
 | 13 | 143 (99) | fragmented cubist planes (+1.6), hard-edged geometric shapes (+1.5), figures (+1.1) | spectral slope +0.6σ |
 | 3 | 127 (77) | a grid of squares (+1.2) | periodicity +1.7σ, spectral slope -0.6σ, rectilinearity +0.5σ |
