@@ -20,7 +20,8 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score, silhouette_score
+from sklearn.metrics import (adjusted_mutual_info_score, adjusted_rand_score, normalized_mutual_info_score,
+                             silhouette_score)
 from sklearn.preprocessing import StandardScaler, normalize
 
 
@@ -81,6 +82,41 @@ def clustering_metrics(Z: np.ndarray, artists: np.ndarray, movements: np.ndarray
         "nmi_movement": np.mean([normalized_mutual_info_score(movements[mv], p[mv]) for p in partitions]),
         "stability_ari": np.mean([adjusted_rand_score(a, b) for a, b in combinations(partitions, 2)]),
         "silhouette": silhouette_score(Z, partitions[0], metric="cosine"),
+    }
+
+
+def partition_metrics(labels: np.ndarray, attached: np.ndarray, manifest: pd.DataFrame,
+                      movements: dict[str, str]) -> dict:
+    """Score a partition that may contain noise (-1).
+
+    AMI (chance-adjusted, unlike NMI which grows with the number of clusters) is computed
+    on core points (`labels >= 0`) and on all points once noise is attached (`attached`).
+    """
+    artists = manifest["artist"].to_numpy()
+    eval_mask = manifest["eval_artist"].to_numpy()
+    mov = np.array([movements.get(a, "") for a in artists])
+    counts = Counter(artists[eval_mask])
+    big = eval_mask & np.array([counts[a] >= 5 for a in artists])
+    has_mov = eval_mask & (mov != "")
+    core = labels >= 0
+
+    def ami(truth, pred, mask):
+        return adjusted_mutual_info_score(truth[mask], pred[mask]) if mask.sum() > 1 else np.nan
+
+    df = pd.DataFrame({"cluster": attached, "artist": artists, "movement": mov})[eval_mask]
+    sizes = df.groupby("cluster").size()
+    top_artist = df.groupby("cluster")["artist"].agg(lambda s: s.value_counts().iloc[0]) / sizes
+    labelled = df[df["movement"] != ""]
+    purity = labelled.groupby("cluster")["movement"].agg(lambda s: s.value_counts().iloc[0]).sum() / len(labelled)
+    return {
+        "n_clusters": len(set(attached)),
+        "coverage": core.mean(),
+        "ami_artist_core": ami(artists, labels, big & core),
+        "ami_movement_core": ami(mov, labels, has_mov & core),
+        "ami_artist_all": ami(artists, attached, big),
+        "ami_movement_all": ami(mov, attached, has_mov),
+        "movement_purity": purity,
+        "artist_dominated": (top_artist > 0.5).mean(),
     }
 
 

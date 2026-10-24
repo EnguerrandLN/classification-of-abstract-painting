@@ -18,6 +18,9 @@ dependencies = [
     "transformers>=4.56",
     "safetensors",
     "tabulate",
+    "evoc",
+    "hdbscan",
+    "umap-learn",
 ]
 
 [tool.setuptools.packages.find]

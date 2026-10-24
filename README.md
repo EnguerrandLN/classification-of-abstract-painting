@@ -7,7 +7,8 @@ how well that map recovers authorship and art-historical movements it was never 
 > **Status — v2 in progress.** The original school project (Télécom Paris, IM06, 2025–2026) is
 > archived on the [`v1-projet-ecole`](../../tree/v1-projet-ecole) branch. v2 replaces its
 > hand-weighted fusion of three feature families by a single vision foundation model, and adds a
-> reproducible evaluation harness. Phase 1 (data cleaning, evaluation, embeddings) is done.
+> reproducible evaluation harness. Phase 1 (data cleaning, evaluation, embeddings) and phase 2
+> (hierarchical density clustering) are done.
 
 ## Results (phase 1)
 
@@ -45,7 +46,48 @@ What the numbers say:
 - **Cosine silhouettes stay between 0.03 and 0.12 for every representation**: the corpus is a
   continuum, not a set of well-separated blobs, and silhouette or stability do not track quality
   (the β-VAE and the handcrafted features are among the most "stable"). K-means is the wrong final
-  tool (see roadmap).
+  tool (see phase 2).
+
+## Clustering (phase 2)
+
+[EVōC](https://evoc.readthedocs.io) (kNN graph → node embedding → density clustering) is run on
+the SigLIP 2 global + Gram embedding, duplicate copies excluded. Hyperparameters are chosen
+**without labels**, by stability under subsampling (ARI between the full clustering and
+clusterings of 5 random 80% subsamples). The exported hierarchy must reach a "family" level
+(≥ 3 layers, coarsest ≤ 12 clusters): **57 → 37 → 16 → 6 clusters**. Paintings outside any dense
+region ("noise", about half) are attached to the cluster voted by their 10 nearest clustered
+neighbours and flagged as non-core.
+
+AMI (adjusted mutual information) is used instead of NMI because NMI grows with the number of
+clusters. Each layer is compared with K-means at the same K on **the same paintings**:
+
+| Layer | Clusters | Core share | Stability | AMI movement, core: EVōC / K-means | AMI artist, core: EVōC / K-means | AMI movement, all (noise attached): EVōC / K-means |
+|--:|--:|--:|--:|--:|--:|--:|
+| 0 | 57 | 54% | 0.85 | **0.448** / 0.407 | **0.652** / 0.584 | 0.286 / 0.293 |
+| 1 | 37 | 51% | 0.82 | **0.460** / 0.410 | **0.641** / 0.540 | 0.286 / 0.275 |
+| 2 | 16 | 51% | 0.68 | **0.434** / 0.392 | **0.552** / 0.487 | 0.254 / 0.246 |
+| 3 | 6 | 56% | 0.66 | **0.386** / 0.324 | **0.401** / 0.374 | 0.231 / 0.219 |
+
+K-means stability is 0.32 / 0.43 / 0.51 at K = 60 / 20 / 8. Full grid and baselines:
+[`results/clustering.md`](results/clustering.md).
+
+What it says:
+
+- **Density clusters are far more reproducible** than K-means (stability 0.66–0.85 vs 0.32–0.51).
+- **On the dense core (about half of the corpus) they match movements and artists better than
+  K-means on the very same paintings** (+0.04 to +0.06 AMI movement, +0.03 to +0.10 AMI artist).
+- **The other half are transitional works**: once they are attached to their nearest cluster, the
+  whole partition is no better than K-means (−0.01 to +0.01 AMI). No partition is convincing for them, so the map should show them as
+  in-between rather than force a label — a principled version of the v1 silhouette skimming.
+- **UMAP → HDBSCAN** clusters more paintings (72%) with a similar core quality, but its hierarchy
+  collapses into 2 clusters as `min_cluster_size` grows; EVōC gives a usable multi-level tree
+  (and fits in 0.1 s instead of ~16 s).
+- **The 6 families are visually and historically coherent**: gestural abstraction (Mitchell,
+  Hartung, de Staël, Zao Wou-Ki), geometry and colour fields (Rothko, Albers, Kelly), orphism and
+  cubo-futurism (Delaunay, Kupka, Kandinsky, Freundlich), matter and monochrome surfaces (Fontana,
+  Burri), surrealist biomorphism (Toyen, Ernst, af Klint) and op art (Vasarely). The 16-cluster
+  layer separates e.g. Rothko's colour fields, de Staël's slabs, calligraphic marks (Twombly,
+  Dubuffet, Lesage) or Zao Wou-Ki's lyrical landscapes. Galleries: `scripts/cluster_gallery.py`.
 
 ## Pipeline
 
@@ -61,6 +103,11 @@ What the numbers say:
    tokens projected on a 48-dim corpus PCA basis — the v1 VGG16 Gram signature on a modern backbone).
 3. **Benchmark** (`scripts/run_benchmark.py`): v1 baselines (`legacy/v1_features`) and v2
    embeddings scored with the protocol above.
+4. **Clustering** (`scripts/run_clustering.py`, ~10 min because of the UMAP baseline): label-free
+   grid over EVōC, UMAP → HDBSCAN and K-means, evaluation, and export of the hierarchy to
+   `outputs/clusters.csv` (one label + `core` flag per layer) and `outputs/cluster_tree.json`
+   (parent of each cluster in the next coarser layer). `scripts/cluster_gallery.py --layer L`
+   renders the most central paintings of every cluster of a layer.
 
 ## Quick start
 
@@ -77,6 +124,8 @@ python scripts/build_manifest.py
 python scripts/extract_embeddings.py --model siglip2
 python scripts/extract_embeddings.py --model dinov2
 python scripts/run_benchmark.py
+python scripts/run_clustering.py
+python scripts/cluster_gallery.py --layer 3
 ```
 
 Model weights are downloaded from Hugging Face on first use (`google/siglip2-base-patch16-naflex`,
@@ -87,19 +136,16 @@ Model weights are downloaded from Hugging Face on first use (`google/siglip2-bas
 ```
 abstrait-v4/            the 1,700 paintings (artist_n.jpg)
 data/                   manifest.csv, duplicates.csv, movements.csv (proxy labels)
-src/abstractart/        data.py, evaluation.py, embeddings/{foundation,legacy}.py
-scripts/                build_manifest, extract_embeddings, run_benchmark
-results/                benchmark.csv / benchmark.md
+src/abstractart/        data.py, evaluation.py, clustering.py, embeddings/{foundation,legacy}.py
+scripts/                build_manifest, extract_embeddings, run_benchmark, run_clustering, cluster_gallery
+results/                benchmark.*, clustering.*, clustering_grid.csv
 legacy/v1_features/     v1 feature caches, kept only as benchmark baselines
 docs/                   references.md, v1 reports (EN/FR)
 ```
 
 ## Roadmap
 
-- **Phase 2 — clustering that fits a continuum**: density-based, hierarchical clustering
-  (HDBSCAN / EVōC) on the SigLIP 2 embedding, with a native "noise" label instead of the v1
-  silhouette skimming, and a movement → sub-style hierarchy. Stability across seeds and
-  bootstraps as a selection criterion.
+- ~~Phase 2 — clustering that fits a continuum~~: done (see above).
 - **Phase 3 — explain the groups**: a small set of interpretable descriptors (palette, entropy,
   symmetry, fractal dimension, line statistics) and formal-analysis descriptions (form, colour,
   texture, composition) to name and contrast clusters.
