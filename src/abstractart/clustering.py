@@ -119,3 +119,20 @@ def parent_map(fine: np.ndarray, coarse: np.ndarray) -> dict[int, int]:
         parents = coarse[(fine == c) & (coarse >= 0)]
         out[int(c)] = int(np.bincount(parents).argmax()) if len(parents) else -1
     return out
+
+
+def nested_hierarchy(Z: np.ndarray, layers: list[Layer]) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    """Strictly nested labels for every painting, plus per-layer core flags.
+
+    Attaching noise independently at each layer would let a painting sit in family A and in
+    a sub-group whose parent is B. Instead, noise is attached at the finest layer only and
+    every coarser label is derived through the fine -> coarse parent map. A painting is core
+    at a layer if the density clustering put it in that very cluster.
+    """
+    attached = [attach_noise(Z, layer.labels) for layer in layers]
+    labels = [attached[0]]
+    for li in range(len(layers) - 1):
+        parents = parent_map(attached[li], attached[li + 1])
+        labels.append(np.array([parents[c] for c in labels[-1]]))
+    core = [(layer.labels >= 0) & (layer.labels == lab) for layer, lab in zip(layers, labels)]
+    return labels, core

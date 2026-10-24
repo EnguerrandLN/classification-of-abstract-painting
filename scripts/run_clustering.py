@@ -9,9 +9,10 @@
    a K-means partition with the same number of clusters (results/clustering.md).
 3. The exported hierarchy (outputs/clusters.csv) must reach a "family" level: among density
    configurations with at least 3 layers and a coarsest layer of at most 12 clusters, the
-   most stable one is kept. It gets one label column per layer (fine -> coarse), noise
-   attached to its nearest clusters, and `core` flags. This is a product requirement, not
-   a choice made by looking at the labels.
+   most stable one is kept. It is made strictly nested (noise attached at the finest layer,
+   coarser labels derived through the parent map) and gets one label column per layer
+   (fine -> coarse) plus `core` flags; it is evaluated in that nested form. This is a product
+   requirement, not a choice made by looking at the labels.
 
 Duplicate copies of an artwork are left out of the clustering and inherit the label of
 the kept copy.
@@ -24,7 +25,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 
 from abstractart import OUTPUT_DIR, ROOT
-from abstractart.clustering import FITTERS, attach_noise, parent_map, stability
+from abstractart.clustering import FITTERS, attach_noise, nested_hierarchy, parent_map, stability
 from abstractart.data import load_manifest, load_movements
 from abstractart.embeddings import load_default_representation
 from abstractart.evaluation import partition_metrics
@@ -97,14 +98,19 @@ def main():
     detail = []
     for _, sel in selected.iterrows():
         cl, stab = fits[(sel["method"], sel["params"])]
-        for li, (layer, s) in enumerate(zip(cl.layers, stab)):
-            labels = expand(layer.labels, manifest, keep)
-            attached = expand(attach_noise(Z, layer.labels), manifest, keep)
+        if sel["role"] == "exported hierarchy":
+            nested, core = nested_hierarchy(Z, cl.layers)
+            layer_labels = [(np.where(c, n, -1), n) for n, c in zip(nested, core)]
+        else:
+            layer_labels = [(layer.labels, attach_noise(Z, layer.labels)) for layer in cl.layers]
+        for li, ((raw, att), s) in enumerate(zip(layer_labels, stab)):
+            labels, attached = expand(raw, manifest, keep), expand(att, manifest, keep)
+            k = len(np.unique(att))
             m = partition_metrics(labels, attached, manifest, movements)
-            km = expand(KMeans(layer.n_clusters, n_init=4, random_state=0).fit_predict(Z), manifest, keep)
+            km = expand(KMeans(k, n_init=4, random_state=0).fit_predict(Z), manifest, keep)
             km_same = partition_metrics(np.where(labels >= 0, km, -1), km, manifest, movements)
             detail.append({
-                "method": sel["method"], "role": sel["role"], "layer": li, "k": layer.n_clusters,
+                "method": sel["method"], "role": sel["role"], "layer": li, "k": k,
                 "coverage": m["coverage"],
                 "stability": s,
                 "AMI artist (core)": m["ami_artist_core"], "AMI movement (core)": m["ami_movement_core"],
@@ -124,19 +130,19 @@ def main():
     (RESULTS_DIR / "clustering.md").write_text("\n".join(md), encoding="utf-8")
     print(detail.to_string(index=False, float_format=lambda v: f"{v:.3f}"))
 
-    # 3. export the hierarchy
+    # 3. export the nested hierarchy
     cl, _ = fits[(exported["method"], exported["params"])]
+    nested, core = nested_hierarchy(Z, cl.layers)
     out = manifest[["filename", "artist"]].copy()
-    attached_layers = [attach_noise(Z, layer.labels) for layer in cl.layers]
-    for li, (layer, attached) in enumerate(zip(cl.layers, attached_layers)):
-        out[f"l{li}"] = expand(attached, manifest, keep)
-        out[f"l{li}_core"] = expand(layer.labels, manifest, keep) >= 0
+    for li, (lab, c) in enumerate(zip(nested, core)):
+        out[f"l{li}"] = expand(lab, manifest, keep)
+        out[f"l{li}_core"] = expand(c, manifest, keep)
     OUTPUT_DIR.mkdir(exist_ok=True)
     out.to_csv(OUTPUT_DIR / "clusters.csv", index=False)
-    # parent of each cluster in the next coarser layer, computed on the attached labels
-    tree = {f"l{li}": parent_map(attached_layers[li], attached_layers[li + 1]) for li in range(len(cl.layers) - 1)}
+    # parent of each cluster in the next coarser layer (exact, since the labels are nested)
+    tree = {f"l{li}": parent_map(nested[li], nested[li + 1]) for li in range(len(nested) - 1)}
     (OUTPUT_DIR / "cluster_tree.json").write_text(json.dumps(tree, indent=1), encoding="utf-8")
-    print(f"exported {exported['method']} {exported['params']}: {[l.n_clusters for l in cl.layers]} clusters "
+    print(f"exported {exported['method']} {exported['params']}: {[len(np.unique(n)) for n in nested]} clusters "
           f"per layer -> {OUTPUT_DIR / 'clusters.csv'}, {OUTPUT_DIR / 'cluster_tree.json'}")
 
 

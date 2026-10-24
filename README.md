@@ -7,8 +7,8 @@ how well that map recovers authorship and art-historical movements it was never 
 > **Status — v2 in progress.** The original school project (Télécom Paris, IM06, 2025–2026) is
 > archived on the [`v1-projet-ecole`](../../tree/v1-projet-ecole) branch. v2 replaces its
 > hand-weighted fusion of three feature families by a single vision foundation model, and adds a
-> reproducible evaluation harness. Phase 1 (data cleaning, evaluation, embeddings) and phase 2
-> (hierarchical density clustering) are done.
+> reproducible evaluation harness. Phases 1 (data cleaning, evaluation, embeddings), 2
+> (hierarchical density clustering) and 3 (cluster explanations) are done.
 
 ## Results (phase 1)
 
@@ -55,8 +55,9 @@ the SigLIP 2 global + Gram embedding, duplicate copies excluded. Hyperparameters
 **without labels**, by stability under subsampling (ARI between the full clustering and
 clusterings of 5 random 80% subsamples). The exported hierarchy must reach a "family" level
 (≥ 3 layers, coarsest ≤ 12 clusters): **57 → 37 → 16 → 6 clusters**. Paintings outside any dense
-region ("noise", about half) are attached to the cluster voted by their 10 nearest clustered
-neighbours and flagged as non-core.
+region ("noise", about half) are attached at the finest layer to the cluster voted by their 10
+nearest clustered neighbours and flagged as non-core; coarser labels are derived through the
+tree, so the hierarchy is strictly nested for every painting.
 
 AMI (adjusted mutual information) is used instead of NMI because NMI grows with the number of
 clusters. Each layer is compared with K-means at the same K on **the same paintings**:
@@ -64,9 +65,9 @@ clusters. Each layer is compared with K-means at the same K on **the same painti
 | Layer | Clusters | Core share | Stability | AMI movement, core: EVōC / K-means | AMI artist, core: EVōC / K-means | AMI movement, all (noise attached): EVōC / K-means |
 |--:|--:|--:|--:|--:|--:|--:|
 | 0 | 57 | 54% | 0.85 | **0.448** / 0.407 | **0.652** / 0.584 | 0.286 / 0.293 |
-| 1 | 37 | 51% | 0.82 | **0.460** / 0.410 | **0.641** / 0.540 | 0.286 / 0.275 |
-| 2 | 16 | 51% | 0.68 | **0.434** / 0.392 | **0.552** / 0.487 | 0.254 / 0.246 |
-| 3 | 6 | 56% | 0.66 | **0.386** / 0.324 | **0.401** / 0.374 | 0.231 / 0.219 |
+| 1 | 37 | 50% | 0.82 | **0.462** / 0.411 | **0.644** / 0.541 | 0.278 / 0.275 |
+| 2 | 16 | 48% | 0.68 | **0.442** / 0.396 | **0.572** / 0.504 | 0.253 / 0.246 |
+| 3 | 6 | 50% | 0.66 | **0.411** / 0.348 | **0.420** / 0.385 | 0.203 / 0.219 |
 
 K-means stability is 0.32 / 0.43 / 0.51 at K = 60 / 20 / 8. Full grid and baselines:
 [`results/clustering.md`](results/clustering.md).
@@ -77,17 +78,54 @@ What it says:
 - **On the dense core (about half of the corpus) they match movements and artists better than
   K-means on the very same paintings** (+0.04 to +0.06 AMI movement, +0.03 to +0.10 AMI artist).
 - **The other half are transitional works**: once they are attached to their nearest cluster, the
-  whole partition is no better than K-means (−0.01 to +0.01 AMI). No partition is convincing for them, so the map should show them as
+  whole partition is no better than K-means (−0.02 to +0.01 AMI). No partition is convincing for them, so the map should show them as
   in-between rather than force a label — a principled version of the v1 silhouette skimming.
 - **UMAP → HDBSCAN** clusters more paintings (72%) with a similar core quality, but its hierarchy
   collapses into 2 clusters as `min_cluster_size` grows; EVōC gives a usable multi-level tree
   (and fits in 0.1 s instead of ~16 s).
 - **The 6 families are visually and historically coherent**: gestural abstraction (Mitchell,
-  Hartung, de Staël, Zao Wou-Ki), geometry and colour fields (Rothko, Albers, Kelly), orphism and
-  cubo-futurism (Delaunay, Kupka, Kandinsky, Freundlich), matter and monochrome surfaces (Fontana,
-  Burri), surrealist biomorphism (Toyen, Ernst, af Klint) and op art (Vasarely). The 16-cluster
-  layer separates e.g. Rothko's colour fields, de Staël's slabs, calligraphic marks (Twombly,
-  Dubuffet, Lesage) or Zao Wou-Ki's lyrical landscapes. Galleries: `scripts/cluster_gallery.py`.
+  de Staël, Zao Wou-Ki, Leroy), minimal geometry and colour fields (Rothko, Albers, Kelly), orphism
+  and cubo-futurism (Freundlich, Kandinsky, Delaunay, Kupka), matter and monochrome surfaces
+  (Fontana, Soulages, Burri), op art and grids (Vasarely) and surrealist biomorphism (Toyen,
+  af Klint, Ernst). The 16-cluster layer separates e.g. Rothko's colour fields, de Staël's slabs,
+  calligraphic marks (Dubuffet, Twombly) or Zao Wou-Ki's lyrical landscapes. Phase 3 describes
+  every cluster; galleries: `scripts/cluster_gallery.py`.
+
+## Explaining the clusters (phase 3)
+
+Each cluster gets a card ([`results/cluster_cards.md`](results/cluster_cards.md)) built from two
+complementary, local sources:
+
+- **20 interpretable descriptors** (`src/abstractart/descriptors.py`), measured at native aspect
+  ratio: lightness, chroma, colourfulness, warm ratio, palette size, edge density, local entropy,
+  flat areas, spectral slope, fractal dimension, rectilinearity, horizontal bias, orientation
+  entropy, symmetry, centre focus, periodicity of repeated motifs… They describe clusters; they
+  are not used to build them.
+- **A 45-term formal-analysis vocabulary** in four facets (form, colour, texture, composition)
+  scored zero-shot by SigLIP 2's text tower ("an abstract painting with thick impasto paint").
+
+Every signal is z-scored and averaged over the cluster's core paintings. Families are contrasted
+with the whole corpus, sub-groups with their family, so each card says what is specific at its
+own level. For example, the Rothko sub-group reads *smooth gradients · soft luminous fields of
+colour*, with measured spectral slope +1.2σ and symmetry +0.7σ, and the de Staël sub-group
+*fragmented cubist planes · slabs of paint applied with a knife*.
+
+The vocabulary is checked before it is trusted ([`results/vocabulary_check.md`](results/vocabulary_check.md)):
+
+- **Label-free**: each term is correlated with the descriptor measuring the same property.
+  13 of 16 correlations have the expected sign; colour and density terms are well grounded
+  ("vivid saturated colours" ↔ colourfulness ρ = 0.59, "a dense crowded composition" ↔ local
+  entropy 0.54, "black and white" ↔ chroma −0.49). The three terms that contradict their
+  measurement ("a pattern of dots", "flat even paint", "a symmetrical composition") are excluded
+  automatically. Geometric and compositional terms are weakly grounded, so for those facets the
+  measured descriptors carry the explanation — consistent with recent findings that vision-language
+  models handle formal analysis poorly (MMArt, 2026).
+- **Movement proxies**: one prompt per movement recognises it zero-shot with a balanced accuracy
+  of 0.20 (chance 0.07), top-3 accuracy 0.48.
+
+Formal families are described crisply (gesture, geometry, matter, op art, colour fields). The
+surrealist family is not: it is defined by imagery rather than form, and its best formal term
+("biomorphic organic shapes", +0.30σ) sits at the reporting threshold.
 
 ## Pipeline
 
@@ -108,6 +146,9 @@ What it says:
    `outputs/clusters.csv` (one label + `core` flag per layer) and `outputs/cluster_tree.json`
    (parent of each cluster in the next coarser layer). `scripts/cluster_gallery.py --layer L`
    renders the most central paintings of every cluster of a layer.
+5. **Explanations** (`scripts/compute_descriptors.py`, ~8 min, then `scripts/explain_clusters.py`):
+   interpretable descriptors, vocabulary grounding check, and one card per cluster
+   (`results/cluster_cards.md`, all layers in `outputs/cluster_cards.json`).
 
 ## Quick start
 
@@ -126,6 +167,8 @@ python scripts/extract_embeddings.py --model dinov2
 python scripts/run_benchmark.py
 python scripts/run_clustering.py
 python scripts/cluster_gallery.py --layer 3
+python scripts/compute_descriptors.py
+python scripts/explain_clusters.py
 ```
 
 Model weights are downloaded from Hugging Face on first use (`google/siglip2-base-patch16-naflex`,
@@ -136,9 +179,10 @@ Model weights are downloaded from Hugging Face on first use (`google/siglip2-bas
 ```
 abstrait-v4/            the 1,700 paintings (artist_n.jpg)
 data/                   manifest.csv, duplicates.csv, movements.csv (proxy labels)
-src/abstractart/        data.py, evaluation.py, clustering.py, embeddings/{foundation,legacy}.py
-scripts/                build_manifest, extract_embeddings, run_benchmark, run_clustering, cluster_gallery
-results/                benchmark.*, clustering.*, clustering_grid.csv
+src/abstractart/        data, evaluation, clustering, descriptors, vocabulary, explain, embeddings/
+scripts/                build_manifest, extract_embeddings, run_benchmark, run_clustering, cluster_gallery,
+                        compute_descriptors, explain_clusters
+results/                benchmark.*, clustering.*, cluster_cards.md, vocabulary_check.md
 legacy/v1_features/     v1 feature caches, kept only as benchmark baselines
 docs/                   references.md, v1 reports (EN/FR)
 ```
@@ -146,9 +190,8 @@ docs/                   references.md, v1 reports (EN/FR)
 ## Roadmap
 
 - ~~Phase 2 — clustering that fits a continuum~~: done (see above).
-- **Phase 3 — explain the groups**: a small set of interpretable descriptors (palette, entropy,
-  symmetry, fractal dimension, line statistics) and formal-analysis descriptions (form, colour,
-  texture, composition) to name and contrast clusters.
+- ~~Phase 3 — explain the groups~~: done (see above). Possible extension: free-text formal
+  descriptions from a local vision-language model, only if they pass the same grounding check.
 - **Phase 4 — facets and map**: facet-conditioned organisation using SigLIP 2's text alignment
   ("group by colour", "by gesture", "by geometry"), and a static, serverless interactive map.
 - **Open question — dataset distribution**: the paintings are copyrighted; the repository should
