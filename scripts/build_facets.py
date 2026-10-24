@@ -94,6 +94,27 @@ def name_clusters(labels, core, term_sim, descriptors, facets, groups, excluded)
     return out
 
 
+def add_conformal_sets(overall: dict, files: list[str], n_layers: int) -> None:
+    """Plausible groups of every painting (scripts/run_conformal.py), plus an "ambiguity" layer."""
+    path = OUTPUT_DIR / "conformal_sets.json"
+    if not path.exists():
+        return
+    conformal = json.loads(path.read_text(encoding="utf-8"))
+    sets, meta = conformal["sets"], conformal["meta"]
+    for layer, l in zip(overall["layers"], range(n_layers - 1, -1, -1)):
+        layer["sets"] = [sets[f][f"l{l}"] for f in files]
+        layer["sets_label"] = f"Plausible at {1 - meta['alpha']:.0%} confidence"
+    n_fam = np.array([min(len(sets[f][f"l{n_layers - 1}"]), 3) for f in files])
+    names = {1: "one plausible family", 2: "two plausible families", 3: "three or more plausible families"}
+    overall["layers"].append({
+        "name": f"Plausible families ({1 - meta['alpha']:.0%})", "labels": n_fam.tolist(),
+        "core": (n_fam == 1).astype(int).tolist(), "core_names": ["ambiguous", "unambiguous"],
+        "clusters": {str(k): {"title": t, "size": int((n_fam == k).sum())} for k, t in names.items()}})
+    overall["about"] += (f" Each painting also gets its set of plausible groups, with {1 - meta['alpha']:.0%} "
+                         "simultaneous confidence across the hierarchy (conformal clustering, Nath, Hur & Allen 2026, "
+                         "adapted to EVoC and to nested groups).")
+
+
 def main():
     manifest = load_manifest()
     keep = ~manifest["is_duplicate"].to_numpy()
@@ -130,6 +151,7 @@ def main():
                                                     "artists": c["artists"], "movement": c["movement"]}
                                  for c in cards if c["layer"] == l}}
                    for l in range(n_layers - 1, -1, -1)]}}
+    add_conformal_sets(views["overall"], files, n_layers)
 
     report = ["# Facet views", "",
               "Each view is built from SigLIP 2 text embeddings of its vocabulary facets only (terms that",

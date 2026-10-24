@@ -111,8 +111,7 @@ dl { margin: 6px 0 0; } dt { font-weight: 600; font-size: 12px; margin-top: 8px;
     <div id="detail"></div>
     <h2 id="groups-title">Groups</h2>
     <ul class="legend" id="legend"></ul>
-    <p class="muted">Filled dots: paintings in a dense region of their group. Rings: transitional paintings,
-      attached to the nearest group. Neighbours are computed in the full embedding, not on this 2-D map.</p>
+    <p class="muted" id="footnote"></p>
   </aside>
 </div>
 <script id="data" type="application/json">__DATA__</script>
@@ -229,9 +228,11 @@ function renderDetail() {
     <h2>Selected painting <button class="close" id="close" aria-label="Close">✕</button></h2>
     <img class="main" src="${DATASET}/${encodeURIComponent(p.f)}" alt="${esc(p.f)}">
     <p><strong>${esc(pretty(p.a))}</strong> <span class="muted">${esc(p.f)}</span>
-       <span class="badge">${here.core ? "core" : "transitional"}</span></p>
+       <span class="badge">${(layer().core_names || ["transitional", "core"])[here.core ? 1 : 0]}</span></p>
     <dl>
       <dt>${esc(layer().name)}</dt><dd>${esc(here.info.title || "—")}</dd>
+      ${layer().sets ? `<dd class="muted">${esc(layer().sets_label)}: ${layer().sets[selected].map(c =>
+        esc((layer().clusters[String(c)] || {}).title || "group " + c)).join(" <strong>or</strong> ")}</dd>` : ""}
       ${here.info.terms ? `<dd class="muted">${termsText(here.info.terms)}</dd>` : ""}
       ${here.info.measured && here.info.measured.length ? `<dd class="muted">${measuredText(here.info.measured)}</dd>` : ""}
       ${others}
@@ -247,6 +248,10 @@ function renderLegend() {
   const L = layer(), counts = {};
   L.labels.forEach(c => counts[c] = (counts[c] || 0) + 1);
   $("groups-title").textContent = L.name;
+  $("footnote").textContent = (L.core_names
+    ? "Filled dots: a single plausible family. Rings: several families are plausible at this confidence level."
+    : "Filled dots: paintings in a dense region of their group. Rings: transitional paintings, attached to the nearest group.")
+    + " Neighbours are computed in the full embedding, not on this 2-D map.";
   $("legend").innerHTML = order.map(c => {
     const info = L.clusters[String(c)] || {};
     return `<li data-c="${c}" class="${focusCluster === c ? "on" : ""}"><span class="sw" style="background:${colours.get(c)}"></span>

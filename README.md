@@ -167,6 +167,54 @@ groups in every view and its nearest paintings, computed in the full embedding r
 the 2-D map. Core paintings are filled dots, transitional ones are rings. The map is generated
 locally and not committed, since its thumbnails derive from copyrighted works.
 
+## Plausible groups with a statistical guarantee (conformal clustering)
+
+Half of the paintings are transitional (phase 2), and attaching them to their nearest group is a
+heuristic. This step re-implements and adapts a method published in 2026 — *Inference for
+Clustering: Conformal Sets for Cluster Labels* and *Weighted Conformal Clustering* (Nath, Hur &
+Allen) — to give every painting a **set of plausible groups** with a coverage guarantee
+(`src/abstractart/conformal.py`, [`results/conformal.md`](results/conformal.md)).
+
+**The papers' idea.** Fit a *soft* clustering, sample each label from the soft memberships
+(taking the argmax breaks the guarantee and under-covers), then calibrate the score of Romano,
+Sesia & Candès (2020) on a held-out split: each set contains the latent group with probability
+≥ 90%, up to terms that vanish when the soft clustering is consistent and stable.
+
+**What is adapted.**
+- *Anchored soft clustering*: EVōC is hard and transductive, so its finest groups anchor a
+  Gaussian mixture with fixed means and an EM-fitted shared variance, in the smallest PCA space
+  (d = 16) where the mixture recovers ≥ 90% of EVōC core paintings. Shared anchors make the
+  papers' label-alignment step unnecessary, and the mixture itself serves as score model (allowed
+  by the first paper's Remark 1).
+- *A set for every painting* through cross-fitting (the papers only cover held-out points).
+- *Hierarchy* (new): labels are sampled at the finest layer and propagated through the tree; each
+  of the 4 layers is calibrated at α/4 and sets are restricted top-down. By the union bound and the
+  nesting of the labels, all four sets cover the painting's groups **simultaneously** with
+  probability ≥ 90%, and they are coherent (a plausible group's family is always plausible). The
+  proof is in the module docstring.
+
+**Checked on simulations with known labels** (synthetic corpora drawn from the mixture fitted on the
+paintings, with Gaussian or heavy-tailed noise): the adapted method reaches 92–97% coverage at
+every layer and 94–96% simultaneously, with sets of 1.0–1.1 groups. As the papers predict, hard
+labels under-cover (87% at the finest layer). The weighted variant with a separate classifier
+returns almost every group (likelihood ratios explode where the mixture is confident), and the
+uncalibrated cutoff over-covers without any guarantee. The choice rule was fixed before scoring
+the real paintings; its history is in `results/conformal.md`.
+
+**On the real paintings**, at the family level 81% of the paintings have a single plausible family
+(mean set size 1.20), core paintings 1.10 vs transitional ones 1.30 (1.26 vs 1.97 at the finest
+layer), and the EVōC family of 99% of core paintings is in their set. The artists with the most
+ambiguous works are those known for changing style — Kandinsky (29% of works with several
+plausible families), Kupka (27%), Hartung (24%), Bergman (20%) — while signature styles are never
+ambiguous: de Staël, Mitchell, Zao Wou-Ki (0%), Vasarely (3%), Rothko (4%). The most frequent
+frontiers are gesture ↔ matter, matter ↔ minimal geometry and gesture ↔ minimal geometry. In the
+map, a painting's card lists its plausible groups, and a "Plausible families" layer colours the
+corpus by ambiguity.
+
+The guarantee is marginal (on average over paintings, not for each one), refers to the latent groups
+of the anchored mixture rather than to an art-historical truth, and holds up to the papers'
+consistency and stability conditions.
+
 ## Pipeline
 
 1. **Manifest** (`scripts/build_manifest.py`): one row per image, keyed by filename. Artist names
@@ -189,9 +237,11 @@ locally and not committed, since its thumbnails derive from copyrighted works.
 5. **Explanations** (`scripts/compute_descriptors.py`, ~8 min, then `scripts/explain_clusters.py`):
    interpretable descriptors, vocabulary grounding check, and one card per cluster
    (`results/cluster_cards.md`, all layers in `outputs/cluster_cards.json`).
-6. **Facets and map** (`scripts/build_facets.py`, then `scripts/build_map.py`): facet views, their
-   validation and clusters, 2-D layouts and neighbours (`outputs/map_data.json`), then the static
-   map with its thumbnails (`outputs/map/`).
+6. **Conformal sets** (`scripts/run_conformal.py`, ~3 min): simulations, choice of the method,
+   plausible groups of every painting (`outputs/conformal_sets.json`).
+7. **Facets and map** (`scripts/build_facets.py`, then `scripts/build_map.py`): facet views, their
+   validation and clusters, 2-D layouts and neighbours (`outputs/map_data.json`, with the conformal
+   sets if present), then the static map with its thumbnails (`outputs/map/`).
 
 ## Quick start
 
@@ -212,6 +262,7 @@ python scripts/run_clustering.py
 python scripts/cluster_gallery.py --layer 3
 python scripts/compute_descriptors.py
 python scripts/explain_clusters.py
+python scripts/run_conformal.py
 python scripts/build_facets.py
 python scripts/build_map.py       # then open outputs/map/index.html
 ```
@@ -224,10 +275,10 @@ Model weights are downloaded from Hugging Face on first use (`google/siglip2-bas
 ```
 abstrait-v4/            the 1,700 paintings (artist_n.jpg)
 data/                   manifest.csv, duplicates.csv, movements.csv (proxy labels)
-src/abstractart/        data, evaluation, clustering, descriptors, vocabulary, explain, facets, embeddings/
+src/abstractart/        data, evaluation, clustering, descriptors, vocabulary, explain, facets, conformal, embeddings/
 scripts/                build_manifest, extract_embeddings, run_benchmark, run_clustering, cluster_gallery,
-                        compute_descriptors, explain_clusters, build_facets, build_map
-results/                benchmark.*, clustering.*, cluster_cards.md, vocabulary_check.md, facets.md
+                        compute_descriptors, explain_clusters, run_conformal, build_facets, build_map
+results/                benchmark.*, clustering.*, cluster_cards.md, vocabulary_check.md, facets.md, conformal.md
 legacy/v1_features/     v1 feature caches, kept only as benchmark baselines
 docs/                   references.md, v1 reports (EN/FR)
 ```

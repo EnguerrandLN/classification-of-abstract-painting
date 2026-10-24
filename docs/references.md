@@ -9,10 +9,14 @@ Third-party papers are cited here instead of being redistributed in the reposito
 - Gatys, Ecker, Bethge. *Image Style Transfer Using Convolutional Neural Networks.* CVPR, 2016 (Gram-matrix style statistics).
 - Huang, Belongie. *Arbitrary Style Transfer in Real-time with Adaptive Instance Normalization.* ICCV, 2017 (channel mean/std style statistics).
 
-## Planned next steps (see README roadmap)
-
-- Campello, Moulavi, Sander. *Density-Based Clustering Based on Hierarchical Density Estimates* (HDBSCAN). PAKDD, 2013.
 - McInnes. *EVōC: Embedding Vector Oriented Clustering.* Tutte Institute, 2025. https://evoc.readthedocs.io
+- Campello, Moulavi, Sander. *Density-Based Clustering Based on Hierarchical Density Estimates* (HDBSCAN). PAKDD, 2013 (baseline).
+- Nath, Hur, Allen. *Inference for Clustering: Conformal Sets for Cluster Labels.* 2026. https://arxiv.org/abs/2604.03488
+- Nath, Hur, Allen. *Weighted Conformal Clustering.* 2026. https://arxiv.org/abs/2606.00436
+- Romano, Sesia, Candès. *Classification with Valid and Adaptive Coverage.* NeurIPS, 2020 (generalised inverse-quantile score).
+
+## Possible extensions
+
 - Gadetsky, Jiang, Brbić. *Let Go of Your Labels with Unsupervised Transfer* (TURTLE). ICML, 2024. https://arxiv.org/abs/2406.07236
 - Somepalli et al. *Investigating Style Similarity in Diffusion Models* (CSD). ECCV, 2024.
 - Jia, Zhang, Zhou. *StyleDecoupler: Generalizable Artistic Style Disentanglement* (WeART dataset). 2026. https://arxiv.org/abs/2601.17697
