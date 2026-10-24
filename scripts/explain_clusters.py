@@ -16,7 +16,6 @@ from dataclasses import asdict
 
 import numpy as np
 import pandas as pd
-from scipy.stats import spearmanr
 from sklearn.metrics import balanced_accuracy_score
 
 from abstractart import OUTPUT_DIR, ROOT
@@ -24,40 +23,16 @@ from abstractart.data import load_manifest, load_movements
 from abstractart.descriptors import NAMES as DESCRIPTOR_NAMES
 from abstractart.embeddings import DEFAULT_MODEL, load_default_representation, load_embeddings
 from abstractart.explain import make_card
-from abstractart.vocabulary import FACETS, MOVEMENT_PROMPTS, TEMPLATE, TERMS, image_text_similarity, term_prompts
+from abstractart.vocabulary import (FACETS, MOVEMENT_PROMPTS, TEMPLATE, grounding, image_text_similarity,
+                                    term_prompts, ungrounded_terms)
 
 RESULTS_DIR = ROOT / "results"
-
-# (term, descriptor measuring the same property, expected sign of the correlation)
-EXPECTED = [
-    ("black and white", "chroma", -1),
-    ("vivid saturated colours", "colourfulness", +1),
-    ("warm red and orange tones", "warm_ratio", +1),
-    ("dark sombre colours", "lightness", -1),
-    ("a monochrome surface", "palette_size", -1),
-    ("a pattern of dots", "periodicity", +1),
-    ("a repetitive optical pattern", "periodicity", +1),
-    ("horizontal bands", "horizontal_bias", +1),
-    ("vertical stripes", "horizontal_bias", -1),
-    ("flat even paint", "flat_ratio", +1),
-    ("a sparse minimal composition", "edge_density", -1),
-    ("hard-edged geometric shapes", "rectilinearity", +1),
-    ("loose gestural brushstrokes", "orientation_entropy", +1),
-    ("a symmetrical composition", "symmetry_lr", +1),
-    ("a centred composition", "centre_focus", +1),
-    ("a dense crowded composition", "local_entropy", +1),
-]
 
 
 def vocabulary_check(term_sim, descriptors, manifest, movements, global_desc) -> tuple[str, frozenset]:
     """Markdown report, and the terms whose correlation contradicts their measurement."""
-    term_index = {t: i for i, (_, t) in enumerate(TERMS)}
-    rows = []
-    for term, desc, sign in EXPECTED:
-        rho = spearmanr(term_sim[:, term_index[term]], descriptors[desc], nan_policy="omit").statistic
-        rows.append({"term": term, "descriptor": desc, "expected sign": "+" if sign > 0 else "−",
-                     "Spearman ρ": rho, "agrees": "yes" if np.sign(rho) == sign else "NO"})
-    corr = pd.DataFrame(rows)
+    kept = ~manifest["is_duplicate"].to_numpy()
+    corr = grounding(term_sim[kept], descriptors[kept])
 
     truth = manifest["artist"].map(movements)
     mask = manifest["eval_artist"].to_numpy() & truth.notna().to_numpy()
@@ -70,11 +45,11 @@ def vocabulary_check(term_sim, descriptors, manifest, movements, global_desc) ->
           f"balanced accuracy {balanced_accuracy_score(y, pred):.3f} (chance {1 / len(set(y)):.3f}), "
           f"top-3 accuracy {(top3 == y[:, None]).any(1).mean():.3f}.")
     agree = (corr["agrees"] == "yes").mean()
-    failed = frozenset(corr.loc[corr["agrees"] == "NO", "term"])
+    failed = ungrounded_terms(corr)
     report = "\n".join([
         "## Label-free check: do the terms mean what they say?", "",
         f"{agree:.0%} of the expected term/descriptor correlations have the expected sign. "
-        f"Terms that contradict their measurement are excluded from the cluster cards: "
+        f"Terms that contradict their measurement are excluded from the cluster cards and the facet views: "
         f"{', '.join(sorted(failed)) or 'none'}.", "",
         corr.to_markdown(index=False, floatfmt=".3f"), "",
         "## Movement proxies", "", zs, "",

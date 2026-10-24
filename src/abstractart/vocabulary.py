@@ -7,6 +7,7 @@ texture, composition), the dimensions used by formal analysis and by Abstract4D.
 """
 
 import numpy as np
+import pandas as pd
 
 from . import OUTPUT_DIR
 
@@ -56,6 +57,44 @@ MOVEMENT_PROMPTS = {
     "kinetic_op": "an op art painting",
     "non_occidental": "a non-western abstract artwork",
 }
+
+
+# Grounding check: (term, descriptor measuring the same property, expected sign of the correlation)
+EXPECTED_GROUNDING = [
+    ("black and white", "chroma", -1),
+    ("vivid saturated colours", "colourfulness", +1),
+    ("warm red and orange tones", "warm_ratio", +1),
+    ("dark sombre colours", "lightness", -1),
+    ("a monochrome surface", "palette_size", -1),
+    ("a pattern of dots", "periodicity", +1),
+    ("a repetitive optical pattern", "periodicity", +1),
+    ("horizontal bands", "horizontal_bias", +1),
+    ("vertical stripes", "horizontal_bias", -1),
+    ("flat even paint", "flat_ratio", +1),
+    ("a sparse minimal composition", "edge_density", -1),
+    ("hard-edged geometric shapes", "rectilinearity", +1),
+    ("loose gestural brushstrokes", "orientation_entropy", +1),
+    ("a symmetrical composition", "symmetry_lr", +1),
+    ("a centred composition", "centre_focus", +1),
+    ("a dense crowded composition", "local_entropy", +1),
+]
+
+
+def grounding(term_sim: np.ndarray, descriptors: pd.DataFrame) -> pd.DataFrame:
+    """Spearman correlation of each checkable term with the descriptor measuring the same property."""
+    from scipy.stats import spearmanr
+    index = {t: i for i, (_, t) in enumerate(TERMS)}
+    rows = []
+    for term, desc, sign in EXPECTED_GROUNDING:
+        rho = spearmanr(term_sim[:, index[term]], descriptors[desc], nan_policy="omit").statistic
+        rows.append({"term": term, "descriptor": desc, "expected sign": "+" if sign > 0 else "−",
+                     "Spearman ρ": rho, "agrees": "yes" if np.sign(rho) == sign else "NO"})
+    return pd.DataFrame(rows)
+
+
+def ungrounded_terms(check: pd.DataFrame) -> frozenset:
+    """Terms whose correlation contradicts their measurement: never used to build or describe anything."""
+    return frozenset(check.loc[check["agrees"] == "NO", "term"])
 
 
 def encode_texts(prompts: list[str], device: str = "cpu") -> np.ndarray:
