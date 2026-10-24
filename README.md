@@ -1,15 +1,16 @@
-# Unsupervised Organisation of Abstract Art
+# Unsupervised Organisation of Abstract Art — alternative version
 
-How do you group abstract paintings when there is no object to recognise? This project builds a
+> **Alternative branch (`modernisation`), exploring more recent methods.** This is not the official
+> project. The version built and submitted for the course (Télécom Paris, IM06, 2025–2026) is on
+> [`main`](../../tree/main), with a frozen copy on [`v1-projet-ecole`](../../tree/v1-projet-ecole).
+> This branch revisits the same question on the same 1,700 paintings with methods published since:
+> vision foundation models (SigLIP 2, DINOv2), hierarchical density clustering (EVōC, 2025), a
+> zero-shot formal vocabulary, facet views, and conformal clustering (2026) adapted to a hierarchy.
+> Every choice is checked with a reproducible evaluation harness against the original pipeline.
+
+How do you group abstract paintings when there is no object to recognise? This branch builds a
 label-free map of 1,700 abstract paintings (517 artists) from the visual signal alone, and measures
 how well that map recovers authorship and art-historical movements it was never shown.
-
-> **Status — v2 in progress.** The original school project (Télécom Paris, IM06, 2025–2026) is
-> archived on the [`v1-projet-ecole`](../../tree/v1-projet-ecole) branch. v2 replaces its
-> hand-weighted fusion of three feature families by a single vision foundation model, and adds a
-> reproducible evaluation harness. Phases 1 (data cleaning, evaluation, embeddings), 2
-> (hierarchical density clustering), 3 (cluster explanations) and 4 (facet views and a static
-> interactive map) are done.
 
 ## Results (phase 1)
 
@@ -30,7 +31,7 @@ Every representation is scored with the same protocol (`src/abstractart/evaluati
 | v1 — best re-weighted combination | 0.456 | 0.218 | 0.153 | 0.161 |
 | DINOv2-B — global + Gram | 0.599 | 0.311 | 0.241 | 0.291 |
 | SigLIP 2-B — global | 0.627 | 0.341 | 0.237 | 0.292 |
-| **SigLIP 2-B — global + Gram (v2 default)** | **0.643** | **0.355** | **0.244** | **0.296** |
+| **SigLIP 2-B — global + Gram (default on this branch)** | **0.643** | **0.355** | **0.244** | **0.296** |
 | DINOv2 + SigLIP 2 — global + Gram | 0.652 | 0.357 | 0.254 | 0.296 |
 
 Full table, including every ablation: [`results/benchmark.md`](results/benchmark.md).
@@ -42,8 +43,9 @@ What the numbers say:
 - **The β-VAE was at chance level** and degraded every fusion it was part of. It is gone.
 - **The v1 Gram-matrix idea survives**: Gram matrices of the transformer's patch tokens are as strong
   as the global embedding, and adding them to it helps for both backbones.
-- **Combining two backbones adds ~1 point** for twice the compute: not worth it, so v2 uses a single
-  model. SigLIP 2 is preferred over DINOv2 because it is also text-aligned, which the next phases use.
+- **Combining two backbones adds ~1 point** for twice the compute: not worth it, so this branch
+  uses a single model. SigLIP 2 is preferred over DINOv2 because it is also text-aligned, which the
+  next phases use.
 - **Cosine silhouettes stay between 0.03 and 0.12 for every representation**: the corpus is a
   continuum, not a set of well-separated blobs, and silhouette or stability do not track quality
   (the β-VAE and the handcrafted features are among the most "stable"). K-means is the wrong final
@@ -227,8 +229,8 @@ consistency and stability conditions.
    patches). Three descriptors per image: `global` (pooled token + mean patch token), `stats`
    (per-channel mean/std of patch tokens at layers 3/6/9/12) and `gram` (Gram matrix of the same
    tokens projected on a 48-dim corpus PCA basis — the v1 VGG16 Gram signature on a modern backbone).
-3. **Benchmark** (`scripts/run_benchmark.py`): v1 baselines (`legacy/v1_features`) and v2
-   embeddings scored with the protocol above.
+3. **Benchmark** (`scripts/run_benchmark.py`): v1 baselines (`legacy/v1_features`) and this
+   branch's embeddings scored with the protocol above.
 4. **Clustering** (`scripts/run_clustering.py`, ~10 min because of the UMAP baseline): label-free
    grid over EVōC, UMAP → HDBSCAN and K-means, evaluation, and export of the hierarchy to
    `outputs/clusters.csv` (one label + `core` flag per layer) and `outputs/cluster_tree.json`
@@ -296,7 +298,7 @@ docs/                   references.md, v1 reports (EN/FR)
 
 Raphaël Legrand, Enguerrand Le Niliot, Eliott Dionnet, Arthur Evain — supervised by Henri Maître
 and Loïc le Folgoc. Reports: [English](docs/v1/report_IM06_en.pdf) ·
-[Français](docs/v1/rapport_IM06_fr.pdf). Code: [`v1-projet-ecole`](../../tree/v1-projet-ecole) branch.
+[Français](docs/v1/rapport_IM06_fr.pdf). Code: [`main`](../../tree/main) branch (frozen copy on [`v1-projet-ecole`](../../tree/v1-projet-ecole)).
 
 v1 fused handcrafted descriptors (colour, texture, HOG, FFT…), VGG16 Gram matrices and a β-VAE via
 weighted alpha-blending, then partitioned the space with K-means refined by silhouette-based
